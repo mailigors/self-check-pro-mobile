@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Self‑Check Pro · полнофункциональный прототип</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #e8ecf2;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 12px;
+    }
+    .phone {
+      max-width: 400px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 40px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.12);
+      overflow: hidden;
+      padding: 20px 16px 8px;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1c1c1e;
+      opacity: 0.5;
+      padding-bottom: 6px;
+    }
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0 12px;
+    }
+    .app-header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0b1b32;
+      letter-spacing: -0.3px;
+    }
+    .app-header .avatar {
+      width: 40px;
+      height: 40px;
+      background: #d0e0ff;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1e4c8a;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .app-header .avatar:hover { opacity: 0.7; }
+
+    /* Screens */
+    .screen { display: block; }
+    .screen.hide { display: none; }
+
+    /* Bottom nav */
+    .bottom-nav {
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0 4px;
+      border-top: 1px solid #e9ecf0;
+      margin-top: 8px;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 11px;
+      color: #7c8595;
+      gap: 2px;
+      cursor: pointer;
+      transition: 0.1s;
+      padding: 4px 12px;
+      border-radius: 30px;
+    }
+    .nav-item i { font-size: 20px; color: #7c8595; }
+    .nav-item.active i, .nav-item.active span { color: #1e4c8a; font-weight: 600; }
+    .nav-item.active { background: #f0f4fe; }
+
+    /* Checklist */
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      padding: 4px 0 14px;
+      flex-wrap: wrap;
+    }
+    .filter-chip {
+      background: #f0f2f5;
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #1c1c1e;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .filter-chip.active {
+      background: #1e4c8a;
+      color: white;
+    }
+    .filter-chip:hover { opacity: 0.7; }
+
+    .checklist-card {
+      background: white;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      margin-bottom: 14px;
+      border: 1px solid #eaedf2;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .checklist-card:hover { background: #fafcff; }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .card-title { font-weight: 600; font-size: 16px; color: #0b1b32; }
+    .card-sub { font-size: 13px; color: #5e6a7c; margin-top: 4px; }
+    .badge {
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge.work { background: #e5f4e9; color: #1f7840; }
+    .badge.done { background: #f0f0f0; color: #5e5e5e; }
+    .badge.wait { background: #fff3d6; color: #a46b00; }
+    .badge.draft { background: #e8edf5; color: #3b4a5c; }
+    .card-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      border: none;
+      background: #f0f2f5;
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-weight: 500;
+      font-size: 13px;
+      color: #1c1c1e;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .btn-primary { background: #1e4c8a; color: white; }
+    .btn-primary:hover { background: #143b6b; }
+    .btn-success { background: #e5f4e9; color: #1f7840; }
+    .btn-success:hover { background: #cde6d6; }
+    .btn-outline { background: transparent; border: 1px solid #cdd4de; }
+    .btn-outline:hover { background: #f0f2f5; }
+    .btn-danger { background: #fff0f0; color: #b22234; }
+    .btn-danger:hover { background: #fde0e0; }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+
+    /* Check screen */
+    .back-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+    .back-row i {
+      color: #1e4c8a;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .back-row span { font-weight: 600; font-size: 16px; }
+    .progress-badge {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #3b4a5c;
+      margin: 6px 0 8px;
+    }
+    .progress-bar {
+      height: 4px;
+      background: #e2e6ec;
+      border-radius: 10px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #1e4c8a;
+      border-radius: 10px;
+      transition: width 0.3s;
+    }
+    .question-group {
+      margin-bottom: 22px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f0f2f6;
+    }
+    .question-label {
+      font-weight: 600;
+      font-size: 15px;
+      color: #0b1b32;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .question-desc {
+      font-size: 13px;
+      color: #5e6a7c;
+      margin: 4px 0 8px;
+    }
+    .question-required { color: #b22234; margin-left: 4px; }
+    .option-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 6px 0 4px;
+    }
+    .option-btn {
+      background: #f0f2f5;
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 14px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .option-btn.selected {
+      background: #d0e0ff;
+      border-color: #1e4c8a;
+      color: #1e4c8a;
+      font-weight: 500;
+    }
+    .option-btn:hover { background: #e4e8ef; }
+    .input-field {
+      background: #f6f8fc;
+      border-radius: 16px;
+      padding: 12px 14px;
+      border: 1px solid #eaedf2;
+      color: #1c1c1e;
+      font-size: 14px;
+      width: 100%;
+      margin-top: 4px;
+      font-family: inherit;
+    }
+    .input-field:focus { outline: 2px solid #1e4c8a40; border-color: #1e4c8a; }
+    .file-upload-area {
+      background: #f6f8fc;
+      border-radius: 16px;
+      padding: 12px;
+      border: 1px dashed #bac8dc;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .file-upload-area:hover { background: #eef2f9; }
+    .file-upload-area i { font-size: 18px; color: #1e4c8a; }
+    .file-upload-area span { font-size: 13px; color: #2b3a4e; }
+    .file-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .file-tag {
+      background: #ecf3fa;
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .file-tag .remove {
+      color: #b22234;
+      cursor: pointer;
+      font-weight: 600;
+      margin-left: 4px;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: #1e4c8a;
+      cursor: pointer;
+    }
+    .slider-value {
+      background: #ecf3fa;
+      padding: 2px 14px;
+      border-radius: 30px;
+      font-weight: 500;
+      font-size: 14px;
+      min-width: 36px;
+      text-align: center;
+    }
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .chip {
+      background: #f0f2f5;
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 13px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .chip.selected {
+      background: #d0e0ff;
+      border-color: #1e4c8a;
+    }
+    .chip:hover { background: #e4e8ef; }
+    .error-hint {
+      font-size: 12px;
+      color: #b22234;
+      margin-top: 2px;
+    }
+    .text-muted { color: #7c8595; font-size: 13px; }
+    .mt-1 { margin-top: 4px; }
+    .mb-1 { margin-bottom: 4px; }
+    .flex { display: flex; align-items: center; gap: 6px; }
+
+    .bottom-actions {
+      display: flex;
+      gap: 10px;
+      margin: 18px 0 8px;
+    }
+    .bottom-actions .btn { flex: 1; justify-content: center; }
+
+    /* Profile */
+    .profile-card {
+      background: white;
+      border-radius: 28px;
+      padding: 20px;
+      border: 1px solid #eaedf2;
+      margin: 8px 0 16px;
+    }
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .profile-row:last-child { border-bottom: none; }
+    .profile-label { color: #5e6a7c; font-size: 14px; }
+    .profile-value { font-weight: 500; color: #0b1b32; text-align: right; max-width: 60%; }
+
+    /* toast */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1c1c1e;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 40px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      max-width: 90%;
+    }
+    .toast.show { opacity: 1; }
+
+    /* empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px 16px;
+      color: #7c8595;
+    }
+    .empty-state i { font-size: 48px; color: #cdd4de; margin-bottom: 12px; }
+
+    /* modal confirm */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: white;
+      border-radius: 32px;
+      padding: 32px 24px 24px;
+      max-width: 320px;
+      width: 90%;
+      text-align: center;
+    }
+    .modal-box h3 { margin-bottom: 8px; }
+    .modal-box p { color: #5e6a7c; font-size: 14px; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 12px; }
+    .modal-actions .btn { flex: 1; justify-content: center; }
+  </style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- Modal -->
+<div id="modal" class="modal-overlay">
+  <div class="modal-box">
+    <h3 id="modal-title">Выход</h3>
+    <p id="modal-text">Вы уверены, что хотите выйти?</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="modal-cancel">Отмена</button>
+      <button class="btn btn-danger" id="modal-confirm">Выйти</button>
+    </div>
+  </div>
+</div>
+
+<div class="phone">
+  <!-- status -->
+  <div class="status-bar"><span>9:41</span><span><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i class="fas fa-battery-three-quarters"></i></span></div>
+
+  <!-- header -->
+  <div class="app-header">
+    <h1 id="app-title">Self‑Check</h1>
+    <div class="avatar" id="profile-avatar">И</div>
+  </div>
+
+  <!-- ===== SCREEN: CHECKLIST ===== -->
+  <div id="screen-checklist" class="screen">
+    <div class="filter-row" id="filter-row">
+      <span class="filter-chip active" data-filter="all">Все</span>
+      <span class="filter-chip" data-filter="work">В работе</span>
+      <span class="filter-chip" data-filter="done">Завершены</span>
+      <span class="filter-chip" data-filter="wait">Ожидание</span>
+    </div>
+    <div id="checklist-container"></div>
+  </div>
+
+  <!-- ===== SCREEN: CHECK ===== -->
+  <div id="screen-check" class="screen hide">
+    <div class="back-row">
+      <i class="fas fa-arrow-left" id="check-back"></i>
+      <span id="check-title">Пожарная безопасность</span>
+      <span style="margin-left:auto; background:#ecf3fa; padding:2px 14px; border-radius:30px; font-size:13px;" id="check-progress-label">0/0</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="check-progress-fill" style="width:0%"></div></div>
+    <div id="questions-container"></div>
+    <div class="bottom-actions">
+      <button class="btn btn-primary" id="save-btn"><i class="fas fa-save"></i> Сохранить</button>
+      <button class="btn btn-success" id="complete-btn"><i class="fas fa-check-circle"></i> Завершить</button>
+    </div>
+    <div style="font-size:12px; color:#7c8595; text-align:center; margin-top:2px;" id="check-status-hint">
+      <i class="fas fa-info-circle"></i> Все обязательные поля заполнены
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: PROFILE ===== -->
+  <div id="screen-profile" class="screen hide">
+    <div class="profile-card">
+      <div style="display:flex; align-items:center; gap:16px; margin-bottom:8px;">
+        <div style="width:64px; height:64px; background:#1e4c8a; border-radius:40px; display:flex; align-items:center; justify-content:center; color:white; font-size:26px; font-weight:600;">ИИ</div>
+        <div>
+          <div style="font-weight:700; font-size:18px;">Иванов Иван</div>
+          <div style="color:#5e6a7c; font-size:14px;">Инспектор</div>
+        </div>
+      </div>
+      <div class="profile-row"><span class="profile-label">Email</span><span class="profile-value">ivanov@example.com</span></div>
+      <div class="profile-row"><span class="profile-label">Организация</span><span class="profile-value">ООО Ромашка</span></div>
+      <div class="profile-row"><span class="profile-label">Объекты</span><span class="profile-value">Цех №1, Склад №3</span></div>
+      <div class="profile-row"><span class="profile-label">Роль</span><span class="profile-value">Пользователь</span></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%; justify-content:center; margin-bottom:10px;" id="change-password-btn"><i class="fas fa-key"></i> Сменить пароль</button>
+    <button class="btn btn-danger" style="width:100%; justify-content:center;" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+    <div style="text-align:center; margin-top:16px; font-size:12px; color:#8e99ab;">v1.0.0 · CLIENT_USER</div>
+  </div>
+
+  <!-- ===== BOTTOM NAV ===== -->
+  <div class="bottom-nav">
+    <div class="nav-item active" data-screen="screen-checklist"><i class="fas fa-list-ul"></i><span>Чек‑листы</span></div>
+    <div class="nav-item" data-screen="screen-check"><i class="fas fa-clipboard-check"></i><span>Прохождение</span></div>
+    <div class="nav-item" data-screen="screen-profile"><i class="fas fa-user"></i><span>Профиль</span></div>
+  </div>
+  <div style="text-align:center; font-size:10px; color:#b0b8c5; padding:6px 0 2px;">ПРОТОТИП · Self‑Check Pro</div>
+</div>
+
+<script>
+  (function() {
+    // ----- DATA -----
+    const checklists = [
+      { id: 1, title: 'Пожарная безопасность', object: 'Цех №1', schedule: 'Ежемесячный обход', status: 'work', start: '31 янв, 10:00', end: '11:00', user: 'Иванов И.' },
+      { id: 2, title: 'Санитарная проверка', object: 'Склад №3', schedule: 'еженедельно', status: 'wait', start: '02 фев, 09:00', end: '10:00', user: 'Петрова А.' },
+      { id: 3, title: 'Электрооборудование', object: 'Цех №2', schedule: 'квартальный', status: 'done', start: '28 янв, 14:00', end: '15:00', user: 'Смирнов С.' },
+      { id: 4, title: 'Вентиляция', object: 'Цех №1', schedule: 'ежемесячно', status: 'draft', start: '05 фев, 11:00', end: '12:00', user: 'Иванов И.' },
+    ];
+
+    // Вопросы для чек-листа (все типы)
+    const questionTemplates = [
+      { id: 'q1', type: 'boolean', label: 'Есть ли огнетушитель?', required: true, desc: '' },
+      { id: 'q2', type: 'short_text', label: 'Серийный номер', required: false, desc: 'short text', placeholder: 'Введите серийный номер' },
+      { id: 'q3', type: 'long_text', label: 'Описание замечаний', required: true, desc: '', placeholder: 'Подробное описание...' },
+      { id: 'q4', type: 'number', label: 'Количество (число)', required: false, desc: '', placeholder: 'Введите число' },
+      { id: 'q5', type: 'double', label: 'Температура (°C)', required: false, desc: 'double', placeholder: 'например 22.5' },
+      { id: 'q6', type: 'slider', label: 'Уровень громкости', required: false, desc: 'slider', min: 0, max: 100, value: 50 },
+      { id: 'q7', type: 'single_choice', label: 'Причина проверки', required: false, desc: '', options: ['Плановая', 'Внеплановая', 'Повторная'] },
+      { id: 'q8', type: 'multi_choice', label: 'Выберите оборудование', required: false, desc: 'multi', options: ['Огнетушитель', 'Пожарный кран', 'Датчик дыма', 'Система оповещения'] },
+      { id: 'q9', type: 'date', label: 'Дата проверки', required: false, desc: '' },
+      { id: 'q10', type: 'datetime', label: 'Дата и время', required: false, desc: 'datetime' },
+      { id: 'q11', type: 'file', label: 'Фото/видео/файлы', required: false, desc: 'прикрепите файлы' },
+      { id: 'q12', type: 'text', label: 'Краткий комментарий', required: false, desc: 'текст', placeholder: 'дополнительная информация' },
+    ];
+
+    // State
+    let currentFilter = 'all';
+    let currentChecklistId = 1;
+    // answers: { qId: value }
+    let answers = {};
+    let selectedFiles = { q11: ['photo1.jpg', 'video1.mp4', 'doc.pdf'] };
+
+    // ----- HELPERS -----
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(el._timeout);
+      el._timeout = setTimeout(() => el.classList.remove('show'), 2500);
+    }
+
+    function showModal(title, text, onConfirm) {
+      const overlay = document.getElementById('modal');
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-text').textContent = text;
+      overlay.classList.add('show');
+      const confirmBtn = document.getElementById('modal-confirm');
+      const cancelBtn = document.getElementById('modal-cancel');
+      const cleanup = () => {
+        overlay.classList.remove('show');
+        confirmBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
+      };
+      const handleConfirm = () => { cleanup(); if (onConfirm) onConfirm(); };
+      const handleCancel = () => { cleanup(); };
+      confirmBtn.addEventListener('click', handleConfirm);
+      cancelBtn.addEventListener('click', handleCancel);
+    }
+
+    function getStatusBadge(status) {
+      const map = {
+        work: '<span class="badge work"><i class="fas fa-play-circle"></i> В работе</span>',
+        done: '<span class="badge done"><i class="fas fa-check-circle"></i> Завершен</span>',
+        wait: '<span class="badge wait"><i class="far fa-clock"></i> Ожидание</span>',
+        draft: '<span class="badge draft"><i class="far fa-file-alt"></i> Черновик</span>',
+      };
+      return map[status] || map.draft;
+    }
+
+    function getStatusActions(status, id) {
+      if (status === 'work') {
+        return `<button class="btn btn-primary" data-action="continue" data-id="${id}"><i class="fas fa-pen"></i> Продолжить</button>
+                <button class="btn btn-success" data-action="complete" data-id="${id}"><i class="fas fa-check"></i> Завершить</button>`;
+      } else if (status === 'wait') {
+        return `<button class="btn btn-primary" data-action="start" data-id="${id}"><i class="fas fa-play"></i> Взять в работу</button>`;
+      } else if (status === 'done') {
+        return `<button class="btn btn-outline" data-action="resume" data-id="${id}"><i class="fas fa-redo-alt"></i> Возобновить</button>
+                <button class="btn btn-outline" data-action="view" data-id="${id}"><i class="fas fa-eye"></i> Просмотр</button>`;
+      } else {
+        return `<button class="btn btn-primary" data-action="continue" data-id="${id}"><i class="fas fa-pen"></i> Продолжить</button>`;
+      }
+    }
+
+    // ----- RENDER CHECKLIST -----
+    function renderChecklist(filter) {
+      const container = document.getElementById('checklist-container');
+      let filtered = checklists;
+      if (filter === 'work') filtered = checklists.filter(c => c.status === 'work');
+      else if (filter === 'done') filtered = checklists.filter(c => c.status === 'done');
+      else if (filter === 'wait') filtered = checklists.filter(c => c.status === 'wait' || c.status === 'draft');
+      else filtered = checklists;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>Назначенных чек-листов пока нет</p></div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(c => `
+        <div class="checklist-card" data-id="${c.id}">
+          <div class="card-top">
+            <div>
+              <div class="card-title">${c.title}</div>
+              <div class="card-sub">${c.object} · ${c.schedule}</div>
+            </div>
+            ${getStatusBadge(c.status)}
+          </div>
+          <div class="flex text-muted" style="margin: 6px 0 4px;">
+            <span><i class="far fa-calendar-alt"></i> ${c.start} – ${c.end}</span>
+            <span><i class="far fa-user"></i> ${c.user}</span>
+          </div>
+          <div class="card-actions">
+            ${getStatusActions(c.status, c.id)}
+          </div>
+        </div>
+      `).join('');
+
+      // Attach event listeners to cards and buttons
+      container.querySelectorAll('.checklist-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('.btn')) return;
+          const id = parseInt(this.dataset.id);
+          openChecklist(id);
+        });
+      });
+      container.querySelectorAll('.btn[data-action]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const action = this.dataset.action;
+          const id = parseInt(this.dataset.id);
+          if (action === 'continue' || action === 'view' || action === 'start' || action === 'resume') {
+            openChecklist(id);
+          } else if (action === 'complete') {
+            toast('✅ Чек-лист завершен! (демо)');
+            const card = this.closest('.checklist-card');
+            if (card) {
+              const c = checklists.find(x => x.id === id);
+              if (c) { c.status = 'done'; renderChecklist(currentFilter); }
+            }
+          }
+        });
+      });
+    }
+
+    // ----- OPEN CHECKLIST (render questions) -----
+    function openChecklist(id) {
+      currentChecklistId = id;
+      const c = checklists.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('check-title').textContent = c.title;
+      showScreen('screen-check');
+
+      // init answers
+      answers = {};
+      questionTemplates.forEach(q => {
+        if (q.type === 'boolean') answers[q.id] = true;
+        else if (q.type === 'slider') answers[q.id] = q.value || 50;
+        else if (q.type === 'single_choice') answers[q.id] = q.options ? q.options[0] : '';
+        else if (q.type === 'multi_choice') answers[q.id] = q.options ? [q.options[0], q.options[1]] : [];
+        else if (q.type === 'date') answers[q.id] = '2026-01-31';
+        else if (q.type === 'datetime') answers[q.id] = '2026-01-31T10:30';
+        else if (q.type === 'file') answers[q.id] = selectedFiles['q11'] || [];
+        else answers[q.id] = '';
+      });
+
+      renderQuestions();
+      updateProgress();
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questions-container');
+      container.innerHTML = questionTemplates.map((q, idx) => {
+        let html = `<div class="question-group" data-qid="${q.id}">`;
+        html += `<div class="question-label">${q.label}${q.required ? ' <span class="question-required">*</span>' : ''}</div>`;
+        if (q.desc) html += `<div class="question-desc">${q.desc}</div>`;
+
+        const val = answers[q.id];
+
+        switch (q.type) {
+          case 'boolean':
+            html += `<div class="option-row" data-qid="${q.id}">
+              <span class="option-btn ${val === true ? 'selected' : ''}" data-value="true">Да</span>
+              <span class="option-btn ${val === false ? 'selected' : ''}" data-value="false">Нет</span>
+            </div>`;
+            if (q.required && val === undefined) html += `<div class="error-hint"><i class="fas fa-exclamation-circle"></i> Обязательный вопрос</div>`;
+            break;
+          case 'short_text':
+          case 'text':
+            html += `<input class="input-field" type="text" placeholder="${q.placeholder || ''}" value="${val || ''}" data-qid="${q.id}" data-type="text">`;
+            break;
+          case 'long_text':
+            html += `<textarea class="input-field" rows="2" placeholder="${q.placeholder || ''}" data-qid="${q.id}" data-type="text">${val || ''}</textarea>`;
+            break;
+          case 'number':
+            html += `<input class="input-field" type="number" placeholder="${q.placeholder || ''}" value="${val || ''}" data-qid="${q.id}" data-type="number">`;
+            break;
+          case 'double':
+            html += `<input class="input-field" type="number" step="0.1" placeholder="${q.placeholder || ''}" value="${val || ''}" data-qid="${q.id}" data-type="number">`;
+            break;
+          case 'slider':
+            html += `<div class="slider-row">
+              <span class="text-muted">тихо</span>
+              <input type="range" min="${q.min||0}" max="${q.max||100}" value="${val || 50}" data-qid="${q.id}" data-type="slider">
+              <span class="slider-value">${val || 50}</span>
+            </div>`;
+            break;
+          case 'single_choice':
+            html += `<div class="option-row" data-qid="${q.id}">`;
+            q.options.forEach(opt => {
+              const sel = val === opt ? 'selected' : '';
+              html += `<span class="option-btn ${sel}" data-value="${opt}">${opt}</span>`;
+            });
+            html += `</div>`;
+            break;
+          case 'multi_choice':
+            html += `<div class="chip-group" data-qid="${q.id}">`;
+            q.options.forEach(opt => {
+              const sel = (val && val.includes(opt)) ? 'selected' : '';
+              html += `<span class="chip ${sel}" data-value="${opt}">${opt}</span>`;
+            });
+            html += `</div>`;
+            const total = q.options.length;
+            const selected = (val && Array.isArray(val)) ? val.length : 0;
+            html += `<div class="text-muted mt-1">выбрано ${selected} из ${total}</div>`;
+            break;
+          case 'date':
+            html += `<input class="input-field" type="date" value="${val || ''}" data-qid="${q.id}" data-type="date">`;
+            break;
+          case 'datetime':
+            html += `<input class="input-field" type="datetime-local" value="${val || ''}" data-qid="${q.id}" data-type="datetime">`;
+            break;
+          case 'file':
+            const files = val || [];
+            html += `<div class="file-upload-area" data-qid="${q.id}">
+              <i class="fas fa-camera"></i>
+              <span>Добавить фото/видео/файлы</span>
+              <span style="margin-left:auto; background:#d0e0ff; padding:2px 12px; border-radius:30px; font-size:12px;">${files.length}</span>
+            </div>`;
+            if (files.length) {
+              html += `<div class="file-tags">`;
+              files.forEach(f => {
+                html += `<span class="file-tag"><i class="fas fa-file"></i> ${f} <span class="remove" data-file="${f}">✕</span></span>`;
+              });
+              html += `</div>`;
+            }
+            break;
+          default:
+            html += `<input class="input-field" placeholder="..." value="${val || ''}" data-qid="${q.id}" data-type="text">`;
+        }
+        html += `</div>`;
+        return html;
+      }).join('');
+
+      // Attach events
+      // options (boolean, single_choice)
+      container.querySelectorAll('.option-row').forEach(row => {
+        const qid = row.dataset.qid;
+        row.querySelectorAll('.option-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const parent = this.closest('.option-row');
+            const isBoolean = parent.closest('.question-group').querySelector('.question-label')?.textContent.includes('огнетушитель');
+            if (isBoolean) {
+              parent.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+              this.classList.add('selected');
+              const val = this.dataset.value === 'true' ? true : false;
+              answers[qid] = val;
+            } else {
+              parent.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+              this.classList.add('selected');
+              answers[qid] = this.dataset.value;
+            }
+            updateProgress();
+          });
+        });
+      });
+
+      // chips (multi_choice)
+      container.querySelectorAll('.chip-group').forEach(group => {
+        const qid = group.dataset.qid;
+        group.querySelectorAll('.chip').forEach(chip => {
+          chip.addEventListener('click', function() {
+            this.classList.toggle('selected');
+            const selected = group.querySelectorAll('.chip.selected');
+            const vals = Array.from(selected).map(el => el.dataset.value);
+            answers[qid] = vals;
+            const total = group.querySelectorAll('.chip').length;
+            const textEl = group.parentElement.querySelector('.text-muted');
+            if (textEl) textEl.textContent = `выбрано ${vals.length} из ${total}`;
+            updateProgress();
+          });
+        });
+      });
+
+      // inputs (text, number, date, datetime)
+      container.querySelectorAll('input[data-type="text"], input[data-type="number"], input[data-type="date"], input[data-type="datetime"], textarea').forEach(el => {
+        const qid = el.dataset.qid;
+        el.addEventListener('input', function() {
+          if (this.type === 'number' || this.type === 'text' || this.type === 'date' || this.type === 'datetime-local') {
+            answers[qid] = this.value;
+          } else {
+            answers[qid] = this.value;
+          }
+          updateProgress();
+        });
+      });
+
+      // slider
+      container.querySelectorAll('input[data-type="slider"]').forEach(slider => {
+        const qid = slider.dataset.qid;
+        const valSpan = slider.parentElement.querySelector('.slider-value');
+        slider.addEventListener('input', function() {
+          const v = parseInt(this.value);
+          if (valSpan) valSpan.textContent = v;
+          answers[qid] = v;
+          updateProgress();
+        });
+      });
+
+      // file upload
+      container.querySelectorAll('.file-upload-area').forEach(area => {
+        const qid = area.dataset.qid;
+        area.addEventListener('click', function() {
+          const fakeFiles = ['photo_' + Date.now() + '.jpg', 'video_' + Date.now() + '.mp4'];
+          if (!answers[qid]) answers[qid] = [];
+          answers[qid] = answers[qid].concat(fakeFiles);
+          selectedFiles[qid] = answers[qid];
+          renderQuestions();
+          updateProgress();
+          toast('📎 Добавлено ' + fakeFiles.join(', '));
+        });
+      });
+
+      // remove file
+      container.querySelectorAll('.remove').forEach(el => {
+        el.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const file = this.dataset.file;
+          const qid = this.closest('.question-group').dataset.qid;
+          if (answers[qid] && Array.isArray(answers[qid])) {
+            answers[qid] = answers[qid].filter(f => f !== file);
+            selectedFiles[qid] = answers[qid];
+            renderQuestions();
+            updateProgress();
+            toast('🗑️ Файл удален');
+          }
+        });
+      });
+    }
+
+    function updateProgress() {
+      const total = questionTemplates.length;
+      let filled = 0;
+      questionTemplates.forEach(q => {
+        const val = answers[q.id];
+        if (q.required) {
+          if (val !== undefined && val !== null && val !== '' && !(Array.isArray(val) && val.length === 0)) {
+            filled++;
+          }
+        } else {
+          if (val !== undefined && val !== null && val !== '' && !(Array.isArray(val) && val.length === 0)) {
+            filled++;
+          }
+        }
+      });
+      const pct = Math.round((filled / total) * 100);
+      document.getElementById('check-progress-label').textContent = `${filled}/${total}`;
+      document.getElementById('check-progress-fill').style.width = pct + '%';
+    }
+
+    // ----- SCREEN NAV -----
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.add('hide'));
+      document.getElementById(id).classList.remove('hide');
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.screen === id);
+      });
+      if (id === 'screen-checklist') {
+        document.getElementById('app-title').textContent = 'Self‑Check';
+        renderChecklist(currentFilter);
+      } else if (id === 'screen-profile') {
+        document.getElementById('app-title').textContent = 'Профиль';
+      } else if (id === 'screen-check') {
+        document.getElementById('app-title').textContent = 'Чек‑лист';
+      }
+    }
+
+    // ----- INIT -----
+    function init() {
+      // filter chips
+      document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', function() {
+          document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+          this.classList.add('active');
+          currentFilter = this.dataset.filter;
+          renderChecklist(currentFilter);
+        });
+      });
+
+      // bottom nav
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+          showScreen(this.dataset.screen);
+        });
+      });
+
+      // avatar -> profile
+      document.getElementById('profile-avatar').addEventListener('click', () => showScreen('screen-profile'));
+
+      // back from check
+      document.getElementById('check-back').addEventListener('click', () => showScreen('screen-checklist'));
+
+      // save
+      document.getElementById('save-btn').addEventListener('click', function() {
+        toast('💾 Данные сохранены (демо)');
+      });
+
+      // complete
+      document.getElementById('complete-btn').addEventListener('click', function() {
+        const c = checklists.find(x => x.id === currentChecklistId);
+        if (c) {
+          // check required
+          let missing = false;
+          questionTemplates.forEach(q => {
+            if (q.required) {
+              const val = answers[q.id];
+              if (val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0)) {
+                missing = true;
+              }
+            }
+          });
+          if (missing) {
+            toast('⚠️ Заполните все обязательные поля');
+            return;
+          }
+          c.status = 'done';
+          toast('✅ Чек-лист завершен!');
+          showScreen('screen-checklist');
+        }
+      });
+
+      // logout
+      document.getElementById('logout-btn').addEventListener('click', function() {
+        showModal('Выход', 'Вы уверены, что хотите выйти?', () => {
+          toast('👋 Вы вышли из системы');
+          showScreen('screen-checklist');
+        });
+      });
+
+      // change password
+      document.getElementById('change-password-btn').addEventListener('click', function() {
+        toast('🔑 Смена пароля (демо)');
+      });
+
+      // render initial
+      renderChecklist('all');
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,5199 @@
+{
+  "openapi": "3.0.1",
+  "info": { "title": "OpenAPI definition", "version": "v0" },
+  "servers": [
+    { "url": "http://localhost:8081", "description": "Generated server url" }
+  ],
+  "tags": [
+    {
+      "name": "Checklists",
+      "description": "Управление контрольными листами (чек-листами)"
+    },
+    {
+      "name": "Template",
+      "description": "Эндпоинты для управления шаблонами чек-листов, разделами, пунктами и метаданными типов вопросов."
+    },
+    { "name": "Organization", "description": "Управление организациями." },
+    {
+      "name": "ControlObject",
+      "description": "Управление объектами контроля."
+    },
+    {
+      "name": "Auth",
+      "description": "Эндпоинты, связанные с аутентификацией (вход, обновление токена, выход)."
+    },
+    {
+      "name": "Users",
+      "description": "Эндпоинты для управления пользователями (блокировка, разблокировка, CRUD)."
+    },
+    {
+      "name": "Attachments",
+      "description": "Эндпоинты для управления вложениями (файлы, изображения и др.), привязанными к бизнес-объектам."
+    },
+    {
+      "name": "InspectionSchedule",
+      "description": "Эндпоинты для управления календарём проверок (расписание автоматического создания контрольных листов)."
+    },
+    {
+      "name": "Health",
+      "description": "Эндпоинты для проверок состояния системы и инфраструктуры (база данных, сервисы и т.д.)."
+    },
+    {
+      "name": "Audit",
+      "description": "Эндпоинты для просмотра логов запросов (аудит)."
+    }
+  ],
+  "paths": {
+    "/api/v1/users/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Получить пользователя",
+        "operationId": "getUserById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Обновить пользователя",
+        "operationId": "updateUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserUpdateRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Пользователь обновлён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}": {
+      "get": {
+        "tags": ["Template"],
+        "summary": "Получить шаблон по id (включая sections и items)",
+        "operationId": "getTemplate",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Шаблон с разделами и пунктами",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Шаблон не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Template"],
+        "summary": "Обновить метаданные шаблона (создаёт новую версию) — без sections/items",
+        "operationId": "updateTemplate",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TemplateUpdateRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Новая версия шаблона создана и возвращена",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Шаблон не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "delete": {
+        "tags": ["Template"],
+        "summary": "Удалить шаблон и все его разделы и пункты (если нет связанных контрольных листов)",
+        "operationId": "deleteTemplate",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Шаблон и все связанные разделы и пункты удалены"
+          },
+          "404": { "description": "Шаблон не найден" },
+          "409": {
+            "description": "Невозможно удалить шаблон: существуют контрольные листы, содержащие пункты из этого шаблона"
+          },
+          "403": { "description": "Доступ запрещён" }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}/sections/{sectionId}": {
+      "put": {
+        "tags": ["Template"],
+        "summary": "Обновить раздел (без items) — создаёт новую версию шаблона",
+        "operationId": "updateSection",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SectionUpdateRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Раздел обновлён, возвращается обновлённый шаблон (новая версия)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SectionInfoDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Шаблон или раздел не найдены",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SectionInfoDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "delete": {
+        "tags": ["Template"],
+        "summary": "Удалить раздел и все его пункты (если нет связанных контрольных листов)",
+        "operationId": "deleteSection",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Раздел и все вложенные пункты удалены" },
+          "404": { "description": "Шаблон или раздел не найдены" },
+          "409": {
+            "description": "Невозможно удалить раздел: существуют контрольные листы, содержащие пункты этого раздела"
+          },
+          "403": { "description": "Доступ запрещён" }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}/sections/{sectionId}/items/{itemId}": {
+      "get": {
+        "tags": ["Template"],
+        "summary": "Получить пункт",
+        "operationId": "getItem",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пункт обновлён, возвращается обновлённый Item",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ItemDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Шаблон/раздел/пункт не найдены",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ItemDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "put": {
+        "tags": ["Template"],
+        "summary": "Обновить пункт — создаёт новую версию шаблона",
+        "operationId": "updateItem",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ItemUpdateRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Пункт обновлён, возвращается обновлённый Item",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ItemDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Шаблон/раздел/пункт не найдены",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ItemDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "delete": {
+        "tags": ["Template"],
+        "summary": "Удалить пункт из раздела (если нет связанных контрольных листов)",
+        "operationId": "deleteItem",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Пункт удалён" },
+          "404": { "description": "Шаблон/раздел/пункт не найдены" },
+          "409": {
+            "description": "Невозможно удалить пункт: существуют контрольные листы, содержащие этот пункт"
+          },
+          "403": { "description": "Доступ запрещён" }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/organizations/{id}": {
+      "get": {
+        "tags": ["Organization"],
+        "summary": "Получить организацию по id",
+        "operationId": "getOrganization",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Организация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Organization"],
+        "summary": "Обновить организацию",
+        "operationId": "updateOrganization",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Организация обновлена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Organization"],
+        "summary": "Удалить организацию",
+        "operationId": "deleteOrganization",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": { "204": { "description": "Организация удалена" } }
+      }
+    },
+    "/api/v1/organizations/{id}/position/{positionId}": {
+      "put": {
+        "tags": ["Organization"],
+        "summary": "Обновить должность",
+        "operationId": "updatePosition",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "positionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PositionRequestDto" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Должность обновлена",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Должность или организация не найдены",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "patch": {
+        "tags": ["Organization"],
+        "summary": "Блокировать/разблокировать должность",
+        "operationId": "blockPosition",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "positionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PositionBlockRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Должность обновлена",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Должность или организация не найдены",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/inspection-schedules/{id}": {
+      "get": {
+        "tags": ["InspectionSchedule"],
+        "summary": "Получить календарь проверок по ID",
+        "description": "Возвращает полную информацию о календаре проверок.  **Особенности:** - Если `inspectorIds` пуст или null → возвращается `\"inspectors\": []` (фронт интерпретирует как «все пользователи») - Связанные сущности (чек-листы, объекты, проверяющие) возвращаются в формате `ObjectNameOnlyDto` ",
+        "operationId": "getInspectionScheduleById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Идентификатор календаря проверок",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Календарь проверок",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Календарь проверок не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "put": {
+        "tags": ["InspectionSchedule"],
+        "summary": "Обновить календарь проверок",
+        "description": "Полностью заменяет существующее расписание новыми данными.  **Логика на сервере:** - Полная замена расписания (не частичное обновление) - Повторная валидация всех полей - Обновление связанных задач в планировщике (если изменились правила расписания) - Отмена старых задач и регистрация новых при изменении параметров ",
+        "operationId": "updateInspectionSchedule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Идентификатор календаря проверок",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InspectionScheduleUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Календарь проверок успешно обновлён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос (ошибка валидации)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Календарь проверок не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "delete": {
+        "tags": ["InspectionSchedule"],
+        "summary": "Удалить календарь проверок",
+        "description": "Удаляет расписание и отменяет все связанные задачи.  **Логика на сервере:** - Удаление записи из БД - Отмена всех запланированных и не наступивших задач, связанных с этим календарём - У наступивших задач удаляется связь с календарём, но сами задачи остаются в системе ",
+        "operationId": "deleteInspectionSchedule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Идентификатор календаря проверок",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Календарь проверок успешно удалён" },
+          "403": { "description": "Доступ запрещён" },
+          "404": { "description": "Календарь проверок не найден" }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/control-objects/{id}": {
+      "get": {
+        "tags": ["ControlObject"],
+        "summary": "Получить объект контроля по id",
+        "operationId": "getControlObject",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Объект контроля",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlObjectResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlObjectResponseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["ControlObject"],
+        "summary": "Обновить объект контроля",
+        "operationId": "updateControlObject",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlObjectRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Объект контроля обновлён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlObjectResponseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["ControlObject"],
+        "summary": "Удалить объект контроля",
+        "operationId": "deleteControlObject",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": { "204": { "description": "Объект контроля удалён" } }
+      }
+    },
+    "/api/v1/checklists/{checklistId}": {
+      "get": {
+        "tags": ["Checklists"],
+        "summary": "Получить контрольный лист по ID",
+        "operationId": "getChecklistById",
+        "parameters": [
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Контрольный лист",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Контрольный лист не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "put": {
+        "tags": ["Checklists"],
+        "summary": "Обновить контрольный лист (все ответы и статус)",
+        "operationId": "updateChecklist",
+        "parameters": [
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChecklistUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Контрольный лист обновлён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос (валидация)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Контрольный лист не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "delete": {
+        "tags": ["Checklists"],
+        "summary": "Удалить контрольный лист",
+        "operationId": "deleteChecklist",
+        "parameters": [
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Контрольный лист удалён" },
+          "403": { "description": "Доступ запрещён" },
+          "404": { "description": "Контрольный лист не найден" }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Список пользователей (фильтрация/страница)",
+        "operationId": "listUsers",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Общий поисковый запрос (по имени, email и т.п.)",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "fullName",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница пользователей",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListUsers200Response"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "post": {
+        "tags": ["Users"],
+        "summary": "Создать пользователя",
+        "operationId": "createUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserCreateRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Пользователь создан",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "409": {
+            "description": "Email уже существует",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates": {
+      "get": {
+        "tags": ["Template"],
+        "summary": "Получить список шаблонов (без sections/items). Поддерживает фильтры organisationId, q, active и сортировку",
+        "operationId": "listTemplates",
+        "parameters": [
+          {
+            "name": "organisationId",
+            "in": "query",
+            "description": "Фильтр по организации (опционально). Если отсутствует — возвращаются глобальные и доступные текущей организации шаблоны",
+            "required": false,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Общий поисковый запрос по полям name и description (опционально).",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "description": "Фильтр по полю active (опционально). true — только активные, false — только неактивные.",
+            "required": false,
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Поле(я) для сортировки. Допустимые поля: name, description, active. Формат: field[,asc|desc]. Примеры: name,desc или description,asc. Можно передавать параметр несколько раз для многопольной сортировки.",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница шаблонов (без sections/items)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListTemplates200Response"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "post": {
+        "tags": ["Template"],
+        "summary": "Создать новый шаблон (без sections/items)",
+        "operationId": "createTemplate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TemplateCreateRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Шаблон создан (версия = 1)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}/sections": {
+      "post": {
+        "tags": ["Template"],
+        "summary": "Добавить новый раздел в шаблон — создаёт новую версию шаблона",
+        "operationId": "createSection",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SectionCreateRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Раздел добавлен, возвращается обновлённый шаблон (новая версия)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SectionInfoDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}/sections/{sectionId}/items": {
+      "post": {
+        "tags": ["Template"],
+        "summary": "Добавить пункт в раздел — создаёт новую версию шаблона",
+        "operationId": "createItem",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ItemCreateRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Пункт добавлен, возвращается Item",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ItemDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}/sections/{sectionId}/items/{itemId}/copy": {
+      "post": {
+        "tags": ["Template"],
+        "summary": "Скопировать пункт в раздел — создаёт новую версию шаблона",
+        "operationId": "copyItem",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Пункт скопирован, возвращается Item",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ItemDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}/copy": {
+      "post": {
+        "tags": ["Template"],
+        "summary": "Скопировать шаблон — создаётся новый шаблон",
+        "operationId": "copyTemplate",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "organisationId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Новый шаблон создан (копия)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Оригинальный шаблон не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/full": {
+      "post": {
+        "tags": ["Template"],
+        "summary": "Создать полностью заполненный шаблон",
+        "operationId": "createFullTemplate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Шаблон создан (версия = 1)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TemplateDto" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TemplateDto" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/organizations": {
+      "get": {
+        "tags": ["Organization"],
+        "summary": "Список организаций (фильтрация/страница)       ",
+        "operationId": "listOrganizations",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Общий поисковый запрос (по наименованию, телефону, email и т.п.)",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "phone",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "description": "Фильтр по активности: true — только активные организации, false — только заблокированные",
+            "required": false,
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница организаций",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListOrganizations200Response"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Organization"],
+        "summary": "Создать организацию",
+        "operationId": "createOrganization",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Организация создана",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/organizations/{id}/position": {
+      "get": {
+        "tags": ["Organization"],
+        "summary": "Список должностей организации (фильтрация/страница)",
+        "operationId": "listPositionsByOrganization",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Общий поисковый запрос (по наименованию, описанию)",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница должностей",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListPositions200Response"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListPositions200Response"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListPositions200Response"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Организация не найдена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListPositions200Response"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "post": {
+        "tags": ["Organization"],
+        "summary": "Создать должность в организации",
+        "operationId": "createPosition",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PositionRequestDto" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Должность создана",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Организация не найдена",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/inspection-schedules": {
+      "get": {
+        "tags": ["InspectionSchedule"],
+        "summary": "Получить список календарей проверок с фильтрацией и пагинацией",
+        "description": "Возвращает страницу календарей проверок с возможностью фильтрации по связанным сущностям.  **Фильтрация:** - `template_id` — фильтр по контрольному листу (проверяется вхождение в массив `checklistIds`) - `controlObjectId` — фильтр по объекту контроля - `user_id` — фильтр по проверяющему - `q` — зарезервирован для общего поиска (пока не используется)  **Сортировка:** Поддерживается сортировка по полям: `id`, `createdAt`, `updatedAt` (формат: `field[,asc|desc]`). ",
+        "operationId": "listInspectionSchedules",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Общий поисковый запрос (зарезервировано для будущего использования)",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "template_id",
+            "in": "query",
+            "description": "Фильтр по ID контрольного листа (проверяется вхождение в checklistIds)",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "controlObjectId",
+            "in": "query",
+            "description": "Фильтр по ID объекта контроля",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "description": "Фильтр по ID проверяющего",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "event_at_from",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "event_at_to",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "description": "Фильтр по активности: true — только активные организации, false — только заблокированные",
+            "required": false,
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Номер страницы (начиная с 0)",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Размер страницы",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 20 }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Поле для сортировки. Формат: `field[,asc|desc]`. Пример: `createdAt,desc`",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница календарей проверок",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListInspectionSchedules200Response"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListInspectionSchedules200Response"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "post": {
+        "tags": ["InspectionSchedule"],
+        "summary": "Создать новый календарь проверок",
+        "description": "Создаёт расписание автоматического создания контрольных листов на основе указанных шаблонов, объектов контроля и проверяющих.  **Логика на сервере:** - Валидация входных данных согласно правилам из спецификации - Проверка существования указанных `checklistIds`, `controlObjectIds`, `inspectorIds` - Преобразование списков ID → `ObjectNameOnlyDto` через JOIN или отдельные lookup-запросы - Сохранение в БД с генерацией `id` - Регистрация задач в планировщике (например, Quartz) для генерации контрольных листов ",
+        "operationId": "createInspectionSchedule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InspectionScheduleCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Календарь проверок успешно создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос (ошибка валидации полей расписания)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён (недостаточно прав)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Один или несколько указанных объектов (чек-листы, объекты контроля, проверяющие) не найдены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/inspection-schedules/description": {
+      "post": {
+        "tags": ["InspectionSchedule"],
+        "summary": "Получить текстовое описание расписания",
+        "description": "Генерирует человекочитаемое описание расписания на русском языке.  **Формат описания:** - Локализация дней недели и месяцев (RU) - Формат времени: `HH:mm` - Дата следующей проверки рассчитывается с учётом `startDate`, `timeFrom`, `timeZone = MSK (UTC+3)`         **Примеры:** - \"Повторение: По Вт, Чт с 10:00 до 12:00 с интервалом 2 нед.\\nСледующая проверка: 30.01.2026 10:00 МСК (Вт)\" - \"Повторение: Каждый день с 09:00 с интервалом 3 дня\\nСледующая проверка: 29.01.2026 09:00 МСК\" ",
+        "operationId": "getScheduleDescription",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/ScheduleDto" },
+                  { "$ref": "#/components/schemas/ScheduleAfterExecutionDto" },
+                  { "$ref": "#/components/schemas/ScheduleAnnualDto" },
+                  { "$ref": "#/components/schemas/ScheduleDailyDto" },
+                  { "$ref": "#/components/schemas/ScheduleMonthlyDto" },
+                  { "$ref": "#/components/schemas/ScheduleWeeklyDto" }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Текстовое описание расписания",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetScheduleDescription200Response"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetScheduleDescription200Response"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Календарь проверок не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetScheduleDescription200Response"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/control-objects": {
+      "get": {
+        "tags": ["ControlObject"],
+        "summary": "Список объектов контроля (фильтрация/страница)",
+        "operationId": "listControlObjects",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Общий поисковый запрос (по имени, телефону и  email)",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "phone",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница объектов контроля",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListControlObjectsByOrganization200Response"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["ControlObject"],
+        "summary": "Создать объект контроля",
+        "operationId": "createControlObject",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ControlObjectRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Объект контроля создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlObjectResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checklists": {
+      "get": {
+        "tags": ["Checklists"],
+        "summary": "Получить список контрольных листов с фильтрацией",
+        "operationId": "getChecklists",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "template_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "controlObjectId",
+            "in": "query",
+            "description": "ID объекта контроля для фильтрации",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "created_at_from",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "created_at_to",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список контрольных листов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetChecklists200Response"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetChecklists200Response"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "post": {
+        "tags": ["Checklists"],
+        "summary": "Создать новый контрольный лист",
+        "operationId": "createChecklist",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChecklistCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Контрольный лист успешно создан",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос (например, нарушена валидация ответов)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Шаблон не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Обновление access token с использованием refresh токена",
+        "operationId": "refreshToken",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RefreshTokenRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Токен успешно обновлён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос (ошибка валидации)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Refresh токен недействителен, истёк или отозван",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Выход из системы — аннулировать refresh токен",
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "Успешный выход (refresh токен аннулирован)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LogoutResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос (например, отсутствует/невалиден refresh токен)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LogoutResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос (отсутствует или невалидный access token)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LogoutResponse" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Вход в систему и получение JWT",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AuthRequestDto" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Аутентификация успешна",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Аутентификация не удалась",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponseDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Смена пароля текущего пользователя",
+        "operationId": "changePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChangePasswordRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Пароль успешно изменён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePasswordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос (текущий пароль неверен или валидация нового пароля не прошла)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePasswordResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос (отсутствует или невалидный токен)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePasswordResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/attachments": {
+      "post": {
+        "tags": ["Attachments"],
+        "summary": "Загрузить файл без связи с объектом",
+        "operationId": "uploadAttachment",
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "query",
+            "description": "Желаемое имя файла (обязательное)",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": ["file"],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "description": "Бинарный файл",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Файл успешно загружен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос (например, отсутствует filename или file)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка при сохранении файла",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/users/{id}/block": {
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Заблокировать или разблокировать пользователя (обновить поле enabled)",
+        "operationId": "blockUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserBlockRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Пользователь успешно обновлён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/users/locale": {
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Сменить локаль пользователя",
+        "operationId": "changeUserLocale",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserLocaleRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Пользователь обновлён (локаль изменена)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}/sections/{sectionId}/items/{itemId}/block": {
+      "patch": {
+        "tags": ["Template"],
+        "summary": "Блокировка пункта (active = false) — создаёт новую версию шаблона",
+        "operationId": "blockItem",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пункт заблокирован, возвращается обновлённый шаблон (новая версия)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}/sections/{sectionId}/items/{itemIdFrom}/to/{itemIdTo}": {
+      "patch": {
+        "tags": ["Template"],
+        "summary": "Перемещение пункта внутри секции",
+        "operationId": "movingItem",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "itemIdFrom",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "itemIdTo",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пункт обновлён, возвращается обновлённый шаблон",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Шаблон/раздел/пункт не найдены",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}/sections/{sectionId}/block": {
+      "patch": {
+        "tags": ["Template"],
+        "summary": "Блокировка раздела (active = false) — создаёт новую версию шаблона",
+        "operationId": "blockSection",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Раздел заблокирован, возвращается обновлённый шаблон (новая версия)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}/sections/{sectionIdFrom}/to/{sectionIdTo}": {
+      "patch": {
+        "tags": ["Template"],
+        "summary": "Перемещение секции внутри шаблона",
+        "operationId": "movingSection",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionIdFrom",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "sectionIdTo",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SectionUpdateRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Раздел обновлён, возвращается обновлённый шаблон",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Шаблон или раздел не найдены",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/templates/{templateId}/block": {
+      "patch": {
+        "tags": ["Template"],
+        "summary": "Блокировка шаблона: устанавливает active = false для новой версии",
+        "operationId": "blockTemplate",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Шаблон заблокирован (создана новая версия)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Шаблон не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/organizations/{id}/position/{position_id}/block": {
+      "patch": {
+        "tags": ["Organization"],
+        "summary": "Блокировать должность организации",
+        "operationId": "positionsBlock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Идентификатор организации",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "position_id",
+            "in": "path",
+            "description": "Идентификатор позиции",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о должности",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Организация не найдена",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/organizations/{id}/block": {
+      "patch": {
+        "tags": ["Organization"],
+        "summary": "Блокировать/разблокировать организацию",
+        "operationId": "blockOrganization",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationBlockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Организация обновлена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inspection-schedules/{id}/block": {
+      "patch": {
+        "tags": ["InspectionSchedule"],
+        "summary": "Заблокировать календарь проверок",
+        "description": "Блокирует расписание и отменяет все связанные задачи.  **Логика на сервере:** - Блокировка записи из БД - Блокировка всех запланированных и не наступивших задач, связанных с этим календарём ",
+        "operationId": "blockInspectionSchedule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Идентификатор календаря проверок",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Календарь проверок успешно заблокирован" },
+          "403": { "description": "Доступ запрещён" },
+          "404": { "description": "Календарь проверок не найден" }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/control-objects/{id}/block": {
+      "patch": {
+        "tags": ["ControlObject"],
+        "summary": "Блокировать/разблокировать объект контроля",
+        "operationId": "blockControlObject",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Объект контроля обновлён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlObjectResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checklists/{checklistId}/towork": {
+      "patch": {
+        "tags": ["Checklists"],
+        "summary": "Взять контрольный лист в работу (установить статус IN_WORK)",
+        "operationId": "toWorkChecklist",
+        "parameters": [
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Статус изменён на IN_WORK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Невозможно завершить — есть ошибки валидации или обязательные поля не заполнены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerValidationErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Контрольный лист не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/checklists/{checklistId}/complete": {
+      "patch": {
+        "tags": ["Checklists"],
+        "summary": "Завершить контрольный лист (установить статус COMPLETED)",
+        "operationId": "completeChecklist",
+        "parameters": [
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Статус изменён на COMPLETED",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Невозможно завершить — есть ошибки валидации или обязательные поля не заполнены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerValidationErrorDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Контрольный лист не найден",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChecklistDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/users/{id}/organizations": {
+      "get": {
+        "tags": ["Organization"],
+        "summary": "Список организаций для пользователя по id",
+        "operationId": "listOrganizationsByUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список организаций",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OrganizationResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/roles": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Получить список ролей пользователя",
+        "operationId": "getUserRoles",
+        "responses": {
+          "200": {
+            "description": "Список ролей (code/description)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RoleDto" }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RoleDto" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RoleDto" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/users/organizations": {
+      "get": {
+        "tags": ["Organization"],
+        "summary": "Список организаций для текущего пользователя (/me)",
+        "operationId": "listMyOrganizations",
+        "responses": {
+          "200": {
+            "description": "Список организаций текущего пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrganizationResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Данные текущего авторизованного пользователя",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "description": "Данные текущего пользователя",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос (отсутствует или невалидный токен)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponseDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/organizations/{id}/users": {
+      "get": {
+        "tags": ["Organization"],
+        "summary": "Список пользователей организации (фильтрация/страница)",
+        "description": "Возвращает страницу пользователей у которых organizationId = id. Доступен только пользователям с ролью 'system'.",
+        "operationId": "listUsersByOrganization",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Общий поисковый запрос (по имени, email и т.п.)",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "fullName",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "enabled",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница пользователей организации",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListUsers200Response"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос (отсутствует или невалидный токен)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListUsers200Response"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён (недостаточно прав, требуется роль system)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListUsers200Response"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/organizations/{id}/position/{position_id}": {
+      "get": {
+        "tags": ["Organization"],
+        "summary": "Должность организации",
+        "operationId": "positionsById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Идентификатор организации",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "position_id",
+            "in": "path",
+            "description": "Идентификатор позиции",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о должности",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "401": {
+            "description": "Неавторизованный запрос",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Организация не найдена",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PositionResponseDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/organizations/{id}/control-objects": {
+      "get": {
+        "tags": ["ControlObject"],
+        "summary": "Список объектов контроля для организации",
+        "operationId": "listControlObjectsByOrganization",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Общий поисковый запрос (по наименованию, телефону, email и т.п.)",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "description": "Фильтр по активности: true — только активные объекты контроля, false — только заблокированные",
+            "required": false,
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница объектов контроля",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListControlObjectsByOrganization200Response"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/items/metadata": {
+      "get": {
+        "tags": ["Template"],
+        "summary": "Справочник поддерживаемых типов вопросов и их схем настроек",
+        "operationId": "getItemMetadata",
+        "responses": {
+          "200": {
+            "description": "Справочник типов вопросов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemMetadataResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inspection-schedules/enums": {
+      "get": {
+        "tags": ["InspectionSchedule"],
+        "summary": "Справочники (enum) для расписаний",
+        "description": "Возвращает списки значений перечислений, используемых в расписаниях (code + локализованные подписи).",
+        "operationId": "listInspectionScheduleEnums",
+        "responses": {
+          "200": {
+            "description": "Справочники значений enum для расписаний",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleEnumsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionScheduleEnumsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/health/db": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Проверить соединение с базой данных",
+        "operationId": "checkDb",
+        "responses": {
+          "200": {
+            "description": "База данных доступна",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DbHealthDto" }
+              }
+            }
+          },
+          "503": {
+            "description": "База данных недоступна",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DbHealthDto" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checklists/{checklistId}/answer/{answerId}/attachments/{attachId}": {
+      "get": {
+        "tags": ["Checklists"],
+        "summary": "Скачать содержимое вложения",
+        "operationId": "downloadAnswerAttachment",
+        "parameters": [
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "answerId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "attachId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Бинарное содержимое файла",
+            "content": {
+              "application/octet-stream": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён (пользователь не имеет прав на объект или файл не принадлежит объекту)",
+            "content": {
+              "application/octet-stream": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "404": {
+            "description": "Вложение не найдено",
+            "content": {
+              "application/octet-stream": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      },
+      "delete": {
+        "tags": ["Checklists"],
+        "summary": "Удалить вложение",
+        "operationId": "deleteAnswerAttachment",
+        "parameters": [
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "answerId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "attachId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Вложение успешно удалено" },
+          "403": {
+            "description": "Доступ запрещён (пользователь не имеет прав на объект или файл не принадлежит объекту)"
+          },
+          "404": { "description": "Вложение не найдено" }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/checklists/{checklistId}/answer/{answerId}/attachments/{attachId}/metadata": {
+      "get": {
+        "tags": ["Checklists"],
+        "summary": "Получить метаданные вложения по ID",
+        "operationId": "getAnswerAttachmentMetadata",
+        "parameters": [
+          {
+            "name": "checklistId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "answerId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "name": "attachId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Метаданные вложения",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён (пользователь не имеет прав на объект, к которому привязан файл)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Вложение не найдено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/audit/objects": {
+      "get": {
+        "tags": ["Audit"],
+        "summary": "Список объектов",
+        "description": "Возвращает список объектов и их локализованные короткие названия в поле `name`. Язык определяется по локали пользователя (Accept-Language / контекст локали).",
+        "operationId": "listAuditObjects",
+        "responses": {
+          "200": {
+            "description": "Список методов контроллеров (code + name)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AuditMethodDto" }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AuditMethodDto" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/audit/methods": {
+      "get": {
+        "tags": ["Audit"],
+        "summary": "Список методов контроллеров (код + локализованное имя)",
+        "description": "Возвращает список кодов методов контроллеров и их локализованные короткие названия в поле `name`. Язык определяется по локали пользователя (Accept-Language / контекст локали).",
+        "operationId": "listAuditMethods",
+        "responses": {
+          "200": {
+            "description": "Список методов контроллеров (code + name)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AuditMethodDto" }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AuditMethodDto" }
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/audit/logs": {
+      "get": {
+        "tags": ["Audit"],
+        "summary": "Получить список записей логирования (короткие записи без body)",
+        "operationId": "listRequestLogs",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Общий поисковый запрос по полям method, url, controllerMethod",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "url",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "controllerMethod",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "success",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "statusCode",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "eventTimeFrom",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "eventTimeTo",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница логов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListRequestLogs200Response"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/api/v1/audit/logs/{id}": {
+      "get": {
+        "tags": ["Audit"],
+        "summary": "Получить полную запись логирования по id",
+        "operationId": "getRequestLogById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Полная запись логирования",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RequestLogDto" }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RequestLogDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "bearerAuth": [] }]
+      }
+    },
+    "/{path}": {
+      "get": {
+        "tags": ["spa-forward-controller"],
+        "operationId": "forward",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": { "schema": { "type": "string", "format": "binary" } }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": ["spa-forward-controller"],
+        "operationId": "forward_1",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": { "schema": { "type": "string", "format": "binary" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ControlObjectShort": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" }
+        },
+        "description": "Список объектов контроля, к которым привязан пользователь (id + name, optional)."
+      },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "email": { "type": "string" },
+          "fullName": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "role": { "$ref": "#/components/schemas/UserResponseDto_role" },
+          "organizationId": {
+            "type": "integer",
+            "description": "ID организации, к которой принадлежит пользователь (если применимо).",
+            "format": "int64"
+          },
+          "organizationName": {
+            "type": "string",
+            "description": "Наименование организации пользователя (если применимо)."
+          },
+          "position": {
+            "$ref": "#/components/schemas/UserResponseDto_position"
+          },
+          "controlObjects": {
+            "type": "array",
+            "description": "Список объектов контроля, к которым привязан пользователь (id + name, optional).",
+            "items": { "$ref": "#/components/schemas/ControlObjectShort" }
+          },
+          "locale": { "type": "string", "enum": ["RU", "EN"] }
+        }
+      },
+      "UserResponseDto_position": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" }
+        },
+        "description": "Должность пользователя (id + name)."
+      },
+      "UserResponseDto_role": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "name": { "type": "string" },
+          "nameEn": { "type": "string" }
+        },
+        "description": "Основная роль пользователя как объект {code, name}."
+      },
+      "UserUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "fullName": { "type": "string" },
+          "password": { "type": "string" },
+          "organizationId": { "type": "integer", "format": "int64" },
+          "positionId": {
+            "type": "integer",
+            "description": "ID должности (optional).",
+            "format": "int64"
+          },
+          "controlObjectIds": {
+            "type": "array",
+            "description": "Список ID объектов проверки (optional).",
+            "items": {
+              "type": "integer",
+              "description": "Список ID объектов проверки (optional).",
+              "format": "int64"
+            }
+          },
+          "enabled": { "type": "boolean" },
+          "role": {
+            "type": "string",
+            "description": "Имя роли, назначаемой пользователю (необязательно)."
+          }
+        }
+      },
+      "ItemDto": {
+        "type": "object",
+        "properties": {
+          "tings": { "$ref": "#/components/schemas/ItemDto" },
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "question_type": {
+            "type": "string",
+            "description": "Тип вопроса (enum)"
+          },
+          "settings": {
+            "type": "object",
+            "description": "Настройки, зависящие от типа вопроса (JSON)"
+          },
+          "required": { "type": "boolean" },
+          "photo_required": { "type": "boolean" },
+          "video_required": { "type": "boolean" },
+          "active": { "type": "boolean" },
+          "order": { "type": "integer", "format": "int32" }
+        },
+        "description": "Пункт внутри раздела"
+      },
+      "SectionDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "active": { "type": "boolean" },
+          "order": { "type": "integer", "format": "int32" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ItemDto" }
+          }
+        },
+        "description": "Раздел шаблона с упорядоченным списком пунктов"
+      },
+      "TemplateDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "organisationId": { "type": "integer", "format": "int64" },
+          "active": { "type": "boolean" },
+          "created_at": {
+            "type": "string",
+            "description": "Дата и время в UTC (ISO 8601). Значение всегда в UTC с суффиксом 'Z', пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Дата и время в UTC (ISO 8601). Значение всегда в UTC с суффиксом 'Z', пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "sections": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SectionDto" }
+          }
+        },
+        "description": "Полная версия шаблона, включает массив sections и все items"
+      },
+      "TemplateUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "organisationId": { "type": "integer", "format": "int64" },
+          "active": { "type": "boolean" }
+        },
+        "description": "Поля, доступные для обновления метаданных шаблона. НЕ должны содержать sections/items"
+      },
+      "SectionInfoDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "active": { "type": "boolean" },
+          "order": { "type": "integer", "format": "int32" }
+        },
+        "description": "Раздел шаблона с упорядоченным списком пунктов"
+      },
+      "SectionUpdateRequest": {
+        "required": ["name"],
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "active": { "type": "boolean" },
+          "order": { "type": "integer", "format": "int32" }
+        },
+        "description": "Параметры для обновления раздела. НЕ должны содержать items"
+      },
+      "ItemUpdateRequest": {
+        "required": [
+          "name",
+          "photo_required",
+          "question_type",
+          "required",
+          "video_required"
+        ],
+        "type": "object",
+        "properties": {
+          "tings": { "$ref": "#/components/schemas/ItemUpdateRequest" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "question_type": { "type": "string" },
+          "settings": { "type": "object" },
+          "required": { "type": "boolean" },
+          "photo_required": { "type": "boolean" },
+          "video_required": { "type": "boolean" },
+          "active": { "type": "boolean" },
+          "order": { "type": "integer", "format": "int32" }
+        },
+        "description": "Параметры для обновления пункта"
+      },
+      "ControlObjectResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "address": { "type": "string" },
+          "organizationId": { "type": "integer", "format": "int64" },
+          "active": { "type": "boolean" }
+        }
+      },
+      "OrganizationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "address": { "type": "string" },
+          "active": { "type": "boolean" },
+          "controlObjects": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ControlObjectResponseDto" }
+          }
+        }
+      },
+      "OrganizationRequestDto": {
+        "required": ["email", "name", "phone"],
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "address": { "type": "string" }
+        }
+      },
+      "PositionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "organizationId": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "active": { "type": "boolean" }
+        }
+      },
+      "PositionRequestDto": {
+        "required": ["name"],
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Наименование должности" },
+          "description": {
+            "type": "string",
+            "description": "Описание (опционально)"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Признак активности (по умолчанию true при создании)"
+          }
+        }
+      },
+      "AnnualRepeatDay": {
+        "required": ["day", "months", "numbers"],
+        "type": "object",
+        "properties": {
+          "months": {
+            "type": "array",
+            "description": "Список месяцев, в которых применяется правило. Значения: JANUARY..DECEMBER.",
+            "items": {
+              "type": "string",
+              "description": "Список месяцев, в которых применяется правило. Значения: JANUARY..DECEMBER.",
+              "enum": [
+                "JANUARY",
+                "FEBRUARY",
+                "MARCH",
+                "APRIL",
+                "MAY",
+                "JUNE",
+                "JULY",
+                "AUGUST",
+                "SEPTEMBER",
+                "OCTOBER",
+                "NOVEMBER",
+                "DECEMBER"
+              ]
+            }
+          },
+          "day": {
+            "type": "string",
+            "enum": [
+              "DAY",
+              "MONDAY",
+              "TUESDAY",
+              "WEDNESDAY",
+              "THURSDAY",
+              "FRIDAY",
+              "SATURDAY",
+              "SUNDAY"
+            ]
+          },
+          "numbers": {
+            "type": "array",
+            "description": "Список значений для выбранного дня. Для DAY — числа в формате '01'..'31'. Для дней недели — ординалы ('1','2','3','4','LAST').",
+            "items": {
+              "type": "string",
+              "description": "Список значений для выбранного дня. Для DAY — числа в формате '01'..'31'. Для дней недели — ординалы ('1','2','3','4','LAST')."
+            }
+          }
+        },
+        "description": "Элемент массива правил повторения для годового расписания. Каждый элемент задаёт набор месяцев и набор значений для выбранного типа дня. Поле `day` может быть `DAY` (означает конкретный день месяца) или один из дней недели (MONDAY..SUNDAY). Семантика поля `numbers` зависит от значения `day`:   - если `day = DAY`: `numbers` — массив строк в формате \"01\"..\"31\" (дни месяца). При генерации, если указанного числа нет в месяце, используется ближайшее меньшее число (например, для 31 апреля будет использовано 30).   - если `day` — день недели: `numbers` — массив ординалов: \"1\",\"2\",\"3\",\"4\",\"LAST\" (первый, второй, третий, четвёртый или последний указанный день недели в месяце). "
+      },
+      "InspectionScheduleDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Уникальный идентификатор календаря проверок",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "Наименование календаря проверок"
+          },
+          "description": {
+            "type": "string",
+            "description": "Описание календаря проверок"
+          },
+          "eventAt": {
+            "type": "string",
+            "description": "Дата и время события (UTC). Значение в ISO 8601 с суффиксом 'Z', пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "template": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "controlObject": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "inspectors": {
+            "type": "array",
+            "description": "Список проверяющих, которым назначаются проверки. Если массив пуст или отсутствует — проверки назначаются всем пользователям. ",
+            "items": { "$ref": "#/components/schemas/ObjectNameOnlyDto" }
+          },
+          "schedule": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ScheduleDto" },
+              { "$ref": "#/components/schemas/ScheduleAfterExecutionDto" },
+              { "$ref": "#/components/schemas/ScheduleAnnualDto" },
+              { "$ref": "#/components/schemas/ScheduleDailyDto" },
+              { "$ref": "#/components/schemas/ScheduleMonthlyDto" },
+              { "$ref": "#/components/schemas/ScheduleWeeklyDto" }
+            ]
+          },
+          "info": {
+            "type": "string",
+            "description": "Краткая информация о расписании (сгенерированная строка)"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Признак активности календаря проверок"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Дата и время создания записи в UTC (ISO 8601), пример: 2026-01-31T09:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T09:00:00Z"
+          }
+        },
+        "description": "Полная информация о календаре проверок"
+      },
+      "MonthlyRepeatDay": {
+        "required": ["day", "numbers"],
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "enum": [
+              "DAY",
+              "MONDAY",
+              "TUESDAY",
+              "WEDNESDAY",
+              "THURSDAY",
+              "FRIDAY",
+              "SATURDAY",
+              "SUNDAY"
+            ]
+          },
+          "numbers": {
+            "type": "array",
+            "description": "Список значений для выбранного дня. Для DAY — числа в формате '01'..'31'. Для дней недели — ординалы ('1','2','3','4','LAST').",
+            "items": {
+              "type": "string",
+              "description": "Список значений для выбранного дня. Для DAY — числа в формате '01'..'31'. Для дней недели — ординалы ('1','2','3','4','LAST')."
+            }
+          }
+        },
+        "description": "Список правил повторения внутри месяца (может содержать несколько записей). Каждая запись описывает пару \"День\" + \"Числа\". Поле \"day\" принимает значения:   - \"DAY\"  — означает конкретный день месяца (число)   - или название дня недели: \"MONDAY\",\"TUESDAY\",...,\"SUNDAY\" — тогда правило означает n-ый указанный день недели в месяце. Поле \"numbers\" содержит набор значений, зависящий от значения поля \"day\":   - если \"day\" = \"DAY\": массив строк-чисел в формате \"01\"..\"31\" — номера дней месяца.     Если указан день больше, чем длина месяца (например, 31 в феврале), при генерации будет использован последний существующий день месяца.   - если \"day\" = одна из дней недели: массив значений-ординалов: \"1\",\"2\",\"3\",\"4\",\"LAST\" — означают первый, второй, третий, четвёртый или последний указанный день недели в месяце. "
+      },
+      "ObjectNameOnlyDto": {
+        "required": ["name"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID объекта",
+            "format": "int64"
+          },
+          "name": { "type": "string" }
+        },
+        "description": "Объект, передающий только наименование (без id)."
+      },
+      "ScheduleAfterExecutionDto": {
+        "required": ["endType", "intervalDays", "startDateTime"],
+        "type": "object",
+        "allOf": [
+          { "$ref": "#/components/schemas/ScheduleDto" },
+          {
+            "type": "object",
+            "properties": {
+              "intervalDays": {
+                "type": "integer",
+                "description": "Интервал в днях между проверками (≥ 1)",
+                "format": "int32"
+              }
+            }
+          }
+        ]
+      },
+      "ScheduleAnnualDto": {
+        "required": ["endType", "intervalYears", "repeatDays", "startDateTime"],
+        "type": "object",
+        "allOf": [
+          { "$ref": "#/components/schemas/ScheduleDto" },
+          {
+            "type": "object",
+            "properties": {
+              "intervalYears": {
+                "type": "integer",
+                "description": "Интервал в годах между проверками (≥ 1)",
+                "format": "int32"
+              },
+              "repeatDays": {
+                "type": "array",
+                "description": "Массив правил \"Дни повторений\" для годового расписания. Каждый элемент — объект `AnnualRepeatDay`. ",
+                "items": { "$ref": "#/components/schemas/AnnualRepeatDay" }
+              }
+            }
+          }
+        ]
+      },
+      "ScheduleDailyDto": {
+        "required": ["endType", "intervalDays", "startDateTime"],
+        "type": "object",
+        "allOf": [
+          { "$ref": "#/components/schemas/ScheduleDto" },
+          {
+            "type": "object",
+            "properties": {
+              "intervalDays": {
+                "type": "integer",
+                "description": "Интервал в днях между проверками (≥ 1)",
+                "format": "int32"
+              },
+              "skipWeekdays": {
+                "type": "array",
+                "description": "Опционально. Список дней недели, которые нужно пропустить при расчёте повторений для DAILY расписания (например, выходные).",
+                "example": ["SATURDAY", "SUNDAY"],
+                "items": {
+                  "type": "string",
+                  "description": "Опционально. Список дней недели, которые нужно пропустить при расчёте повторений для DAILY расписания (например, выходные).",
+                  "example": "[\"SATURDAY\",\"SUNDAY\"]",
+                  "enum": [
+                    "MONDAY",
+                    "TUESDAY",
+                    "WEDNESDAY",
+                    "THURSDAY",
+                    "FRIDAY",
+                    "SATURDAY",
+                    "SUNDAY"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ScheduleDto": {
+        "required": ["endType", "scheduleType", "startDateTime"],
+        "type": "object",
+        "properties": {
+          "startDateTime": {
+            "type": "string",
+            "description": "Дата и время начала расписания (UTC). Ожидается ISO 8601 с суффиксом 'Z', пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "endType": {
+            "type": "string",
+            "enum": ["NEVER", "AFTER_N_OCCURRENCES", "UNTIL_DATE"]
+          },
+          "endAfterCount": {
+            "type": "integer",
+            "description": "Количество запланированных проверок. Обязательно, если `endType = AFTER_N_OCCURRENCES`. ",
+            "format": "int32"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "Максимальная дата последней проверки (LocalDate, формат YYYY-MM-DD). Обязательно, если `endType = UNTIL_DATE`. Должно быть ≥ `startDateTime`. ",
+            "format": "date"
+          },
+          "scheduleType": { "type": "string" }
+        },
+        "description": "Объект расписания описывает правила повторения проверок во времени. Является полиморфным — структура зависит от поля `scheduleType`. ",
+        "discriminator": { "propertyName": "scheduleType" }
+      },
+      "ScheduleMonthlyDto": {
+        "required": ["endType", "intervalMonths", "startDateTime"],
+        "type": "object",
+        "allOf": [
+          { "$ref": "#/components/schemas/ScheduleDto" },
+          {
+            "type": "object",
+            "properties": {
+              "intervalMonths": {
+                "type": "integer",
+                "description": "Интервал в месяцах между проверками (≥ 1)",
+                "format": "int32"
+              },
+              "monthlyRepeatDays": {
+                "type": "array",
+                "description": "Список правил повторения внутри месяца (может содержать несколько записей). Каждая запись описывает пару \"День\" + \"Числа\". Поле \"day\" принимает значения:   - \"DAY\"  — означает конкретный день месяца (число)   - или название дня недели: \"MONDAY\",\"TUESDAY\",...,\"SUNDAY\" — тогда правило означает n-ый указанный день недели в месяце. Поле \"numbers\" содержит набор значений, зависящий от значения поля \"day\":   - если \"day\" = \"DAY\": массив строк-чисел в формате \"01\"..\"31\" — номера дней месяца.     Если указан день больше, чем длина месяца (например, 31 в феврале), при генерации будет использован последний существующий день месяца.   - если \"day\" = одна из дней недели: массив значений-ординалов: \"1\",\"2\",\"3\",\"4\",\"LAST\" — означают первый, второй, третий, четвёртый или последний указанный день недели в месяце. ",
+                "items": { "$ref": "#/components/schemas/MonthlyRepeatDay" }
+              }
+            }
+          }
+        ]
+      },
+      "ScheduleWeeklyDto": {
+        "required": [
+          "endType",
+          "intervalWeeks",
+          "repeatOnDays",
+          "startDateTime"
+        ],
+        "type": "object",
+        "allOf": [
+          { "$ref": "#/components/schemas/ScheduleDto" },
+          {
+            "type": "object",
+            "properties": {
+              "intervalWeeks": {
+                "type": "integer",
+                "description": "Интервал в неделях между проверками (≥ 1)",
+                "format": "int32"
+              },
+              "repeatOnDays": {
+                "type": "array",
+                "description": "Список дней недели, в которые проводятся проверки (минимум 1 элемент)",
+                "items": {
+                  "type": "string",
+                  "description": "Список дней недели, в которые проводятся проверки (минимум 1 элемент)",
+                  "enum": [
+                    "MONDAY",
+                    "TUESDAY",
+                    "WEDNESDAY",
+                    "THURSDAY",
+                    "FRIDAY",
+                    "SATURDAY",
+                    "SUNDAY"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      "InspectionScheduleUpdateRequest": {
+        "required": ["eventAt", "name", "schedule"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Наименование календаря проверок"
+          },
+          "description": {
+            "type": "string",
+            "description": "Описание календаря проверок"
+          },
+          "eventAt": {
+            "type": "string",
+            "description": "Дата и время события (UTC). Ожидается ISO 8601 с суффиксом 'Z', пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "templateId": {
+            "type": "integer",
+            "description": "Идентификатор контрольного листа (не может быть пустым)",
+            "format": "int64"
+          },
+          "controlObjectId": {
+            "type": "integer",
+            "description": "Идентификатор объекта контроля (не может быть пустым)",
+            "format": "int64"
+          },
+          "inspectorIds": {
+            "type": "array",
+            "description": "Список идентификаторов проверяющих. Если null или пустой массив — проверки назначаются всем пользователям. ",
+            "items": {
+              "type": "integer",
+              "description": "Список идентификаторов проверяющих. Если null или пустой массив — проверки назначаются всем пользователям. ",
+              "format": "int64"
+            }
+          },
+          "schedule": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ScheduleDto" },
+              { "$ref": "#/components/schemas/ScheduleAfterExecutionDto" },
+              { "$ref": "#/components/schemas/ScheduleAnnualDto" },
+              { "$ref": "#/components/schemas/ScheduleDailyDto" },
+              { "$ref": "#/components/schemas/ScheduleMonthlyDto" },
+              { "$ref": "#/components/schemas/ScheduleWeeklyDto" }
+            ]
+          }
+        },
+        "description": "Запрос на обновление календаря проверок"
+      },
+      "ControlObjectRequestDto": {
+        "required": ["name"],
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "address": { "type": "string" },
+          "organizationId": { "type": "integer", "format": "int64" }
+        }
+      },
+      "AnswerDto": {
+        "required": ["answer", "item_id"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID вопроса",
+            "format": "int64"
+          },
+          "item_id": {
+            "type": "integer",
+            "description": "ID вопроса из шаблона",
+            "format": "int64"
+          },
+          "answer": {
+            "type": "object",
+            "description": "Значение зависит от типа вопроса в шаблоне. Может быть: boolean, дата/время, строка, число или массив строк. "
+          },
+          "photo_ids": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AttachmentResponseDto" }
+          },
+          "video_ids": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AttachmentResponseDto" }
+          },
+          "other_ids": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AttachmentResponseDto" }
+          }
+        }
+      },
+      "AnswerValidationErrorDto": {
+        "required": ["errors"],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "integer",
+            "description": "Идентификатор пункта (вопроса), если есть",
+            "format": "int64"
+          },
+          "itemName": {
+            "type": "string",
+            "description": "Текст вопроса (item.name)"
+          },
+          "errors": {
+            "type": "array",
+            "description": "Список сообщений об ошибках для данного ответа",
+            "items": {
+              "type": "string",
+              "description": "Список сообщений об ошибках для данного ответа"
+            }
+          }
+        },
+        "description": "Список ошибок валидации ответов (необязательное поле)."
+      },
+      "AttachmentCoordinatesDto": {
+        "type": "object",
+        "properties": {
+          "latitude": { "type": "number", "format": "double" },
+          "longitude": { "type": "number", "format": "double" }
+        }
+      },
+      "AttachmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "attachmentId": { "type": "integer", "format": "int64" },
+          "filename": { "type": "string" },
+          "contentType": { "type": "string" },
+          "size": { "type": "integer", "format": "int64" },
+          "user": { "$ref": "#/components/schemas/UserShortResponseDto" },
+          "coordinates": {
+            "$ref": "#/components/schemas/AttachmentCoordinatesDto"
+          }
+        }
+      },
+      "ChecklistDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "inspectionSchedule": {
+            "$ref": "#/components/schemas/ObjectNameOnlyDto"
+          },
+          "template": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "controlObject": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "inspector": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "user": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "status": { "$ref": "#/components/schemas/ChecklistStatus" },
+          "start_at": {
+            "type": "string",
+            "description": "Дата и время начала проверки в UTC (ISO 8601), пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "end_at": {
+            "type": "string",
+            "description": "Дата и время окончания проверки в UTC (ISO 8601), пример: 2026-01-31T11:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T11:00:00Z"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Дата и время создания записи в UTC (ISO 8601), пример: 2026-01-31T09:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T09:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Дата и время последнего обновления записи в UTC (ISO 8601), пример: 2026-01-31T09:30:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T09:30:00Z"
+          },
+          "answers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AnswerDto" }
+          },
+          "answerValidationErrors": {
+            "type": "array",
+            "description": "Список ошибок валидации ответов (необязательное поле).",
+            "items": { "$ref": "#/components/schemas/AnswerValidationErrorDto" }
+          }
+        }
+      },
+      "ChecklistStatus": {
+        "required": ["code"],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Код статуса (enum)",
+            "enum": ["IN_WORK", "DRAFT", "COMPLETED"]
+          },
+          "description": {
+            "type": "string",
+            "description": "Описание статуса на русском"
+          },
+          "descriptionEn": {
+            "type": "string",
+            "description": "Описание статуса на английском"
+          }
+        },
+        "description": "Статус контрольного листа с кодом и описаниями на русском и английском."
+      },
+      "UserShortResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "email": { "type": "string" },
+          "fullName": { "type": "string" }
+        }
+      },
+      "ChecklistUpdateRequest": {
+        "required": ["answers"],
+        "type": "object",
+        "properties": {
+          "control_object_id": { "type": "integer", "format": "int64" },
+          "start_at": {
+            "type": "string",
+            "description": "Дата и время начала проверки в UTC (ISO 8601). Пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "end_at": {
+            "type": "string",
+            "description": "Дата и время окончания проверки в UTC (ISO 8601). Пример: 2026-01-31T11:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T11:00:00Z"
+          },
+          "answers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AnswerDto" }
+          }
+        }
+      },
+      "UserCreateRequest": {
+        "required": ["email", "fullName", "organizationId"],
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "fullName": { "type": "string" },
+          "organizationId": { "type": "integer", "format": "int64" },
+          "positionId": {
+            "type": "integer",
+            "description": "ID должности (optional).",
+            "format": "int64"
+          },
+          "controlObjectIds": {
+            "type": "array",
+            "description": "Список ID объектов проверки (optional).",
+            "items": {
+              "type": "integer",
+              "description": "Список ID объектов проверки (optional).",
+              "format": "int64"
+            }
+          },
+          "enabled": { "type": "boolean" },
+          "password": {
+            "type": "string",
+            "description": "Plain password (will not be returned)"
+          },
+          "role": {
+            "type": "string",
+            "description": "Имя роли, присваиваемой создаваемому пользователю (необязательно)."
+          }
+        }
+      },
+      "TemplateCreateRequest": {
+        "required": ["active", "name"],
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "organisationId": { "type": "integer", "format": "int64" },
+          "active": { "type": "boolean" }
+        },
+        "description": "Параметры для создания шаблона. НЕ должны содержать sections/items"
+      },
+      "SectionCreateRequest": {
+        "required": ["name"],
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "active": { "type": "boolean" },
+          "order": { "type": "integer", "format": "int32" }
+        },
+        "description": "Параметры для создания раздела. НЕ должны содержать items"
+      },
+      "ItemCreateRequest": {
+        "required": [
+          "name",
+          "photo_required",
+          "question_type",
+          "required",
+          "video_required"
+        ],
+        "type": "object",
+        "properties": {
+          "tings": { "$ref": "#/components/schemas/ItemCreateRequest" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "question_type": {
+            "type": "string",
+            "description": "Тип вопроса (enum)"
+          },
+          "settings": { "type": "object" },
+          "required": { "type": "boolean" },
+          "photo_required": { "type": "boolean" },
+          "video_required": { "type": "boolean" },
+          "active": { "type": "boolean" },
+          "order": { "type": "integer", "format": "int32" }
+        },
+        "description": "Параметры для создания пункта. НЕ должны содержать id"
+      },
+      "InspectionScheduleCreateRequest": {
+        "required": ["eventAt", "name", "schedule"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Наименование календаря проверок"
+          },
+          "description": {
+            "type": "string",
+            "description": "Описание календаря проверок"
+          },
+          "eventAt": {
+            "type": "string",
+            "description": "Дата и время события (UTC). Ожидается ISO 8601 с суффиксом 'Z', пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "templateId": {
+            "type": "integer",
+            "description": "Идентификатор контрольного листа (не может быть пустым)",
+            "format": "int64"
+          },
+          "controlObjectId": {
+            "type": "integer",
+            "description": "Идентификатор объекта контроля (не может быть пустым)",
+            "format": "int64"
+          },
+          "inspectorIds": {
+            "type": "array",
+            "description": "Список идентификаторов проверяющих. Если null или пустой массив — проверки назначаются всем пользователям. ",
+            "items": {
+              "type": "integer",
+              "description": "Список идентификаторов проверяющих. Если null или пустой массив — проверки назначаются всем пользователям. ",
+              "format": "int64"
+            }
+          },
+          "schedule": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ScheduleDto" },
+              { "$ref": "#/components/schemas/ScheduleAfterExecutionDto" },
+              { "$ref": "#/components/schemas/ScheduleAnnualDto" },
+              { "$ref": "#/components/schemas/ScheduleDailyDto" },
+              { "$ref": "#/components/schemas/ScheduleMonthlyDto" },
+              { "$ref": "#/components/schemas/ScheduleWeeklyDto" }
+            ]
+          }
+        },
+        "description": "Запрос на создание календаря проверок"
+      },
+      "GetScheduleDescription200Response": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Человекочитаемое описание расписания на русском языке"
+          }
+        }
+      },
+      "ChecklistCreateRequest": {
+        "required": ["answers", "control_object_id", "template_id"],
+        "type": "object",
+        "properties": {
+          "template_id": { "type": "integer", "format": "int64" },
+          "control_object_id": { "type": "integer", "format": "int64" },
+          "start_at": {
+            "type": "string",
+            "description": "Дата и время начала проверки в UTC (ISO 8601). Допустимый формат: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "end_at": {
+            "type": "string",
+            "description": "Дата и время окончания проверки в UTC (ISO 8601). Допустимый формат: 2026-01-31T11:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T11:00:00Z"
+          },
+          "answers": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AnswerDto" }
+          }
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Новый access токен."
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Новый refresh токен (может быть null)."
+          },
+          "expiresIn": {
+            "type": "integer",
+            "description": "Время жизни access токена в секундах.",
+            "format": "int64"
+          },
+          "refreshExpiresIn": {
+            "type": "integer",
+            "description": "Время жизни refresh токена в секундах.",
+            "format": "int64"
+          }
+        }
+      },
+      "RefreshTokenRequest": {
+        "required": ["refreshToken"],
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh токен, используемый для обновления access токена."
+          }
+        }
+      },
+      "LogoutResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" }
+        }
+      },
+      "AuthResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "JWT access токен для аутентификации запросов."
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh токен для получения нового access токена (может быть null)."
+          },
+          "tokenType": {
+            "type": "string",
+            "description": "Тип токена (обычно 'Bearer')."
+          },
+          "expiresIn": {
+            "type": "integer",
+            "description": "Время жизни access токена в секундах.",
+            "format": "int64"
+          },
+          "refreshExpiresIn": {
+            "type": "integer",
+            "description": "Время жизни refresh токена в секундах.",
+            "format": "int64"
+          },
+          "permissions": {
+            "type": "array",
+            "description": "Список кодов прав пользователя.",
+            "items": {
+              "type": "string",
+              "description": "Список кодов прав пользователя."
+            }
+          },
+          "role": {
+            "type": "string",
+            "description": "Имя основной роли пользователя (если задана)."
+          }
+        }
+      },
+      "AuthRequestDto": {
+        "required": ["email", "password"],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email пользователя (логин)."
+          },
+          "password": {
+            "type": "string",
+            "description": "Пароль пользователя."
+          }
+        }
+      },
+      "ChangePasswordResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" }
+        }
+      },
+      "ChangePasswordRequest": {
+        "required": ["confirmPassword", "currentPassword", "newPassword"],
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "description": "Текущий пароль пользователя."
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "Новый пароль (минимум 8 символов)."
+          },
+          "confirmPassword": {
+            "type": "string",
+            "description": "Подтверждение нового пароля."
+          }
+        }
+      },
+      "UserBlockRequest": {
+        "required": ["enabled"],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "true — пользователь активен, false — пользователь заблокирован"
+          }
+        }
+      },
+      "UserLocaleRequest": {
+        "required": ["locale"],
+        "type": "object",
+        "properties": { "locale": { "type": "string", "enum": ["RU", "EN"] } }
+      },
+      "PositionBlockRequest": {
+        "required": ["active"],
+        "type": "object",
+        "properties": { "active": { "type": "boolean" } }
+      },
+      "OrganizationBlockRequest": {
+        "required": ["active"],
+        "type": "object",
+        "properties": { "active": { "type": "boolean" } }
+      },
+      "ListUsers200Response": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserResponseDto" }
+          },
+          "totalElements": { "type": "integer", "format": "int32" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "number": { "type": "integer", "format": "int32" }
+        }
+      },
+      "RoleDto": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string", "description": "Код роли (name в базе)" },
+          "description": { "type": "string", "description": "Описание роли" },
+          "descriptionEn": { "type": "string", "description": "Описание роли" }
+        }
+      },
+      "ListTemplates200Response": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TemplateListItemDto" }
+          },
+          "totalElements": { "type": "integer", "format": "int32" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "number": { "type": "integer", "format": "int32" }
+        }
+      },
+      "TemplateListItemDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "organisationId": { "type": "integer", "format": "int64" },
+          "active": { "type": "boolean" },
+          "created_at": {
+            "type": "string",
+            "description": "Дата и время в UTC (ISO 8601). Значение всегда в UTC с суффиксом 'Z', пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Дата и время в UTC (ISO 8601). Значение всегда в UTC с суффиксом 'Z', пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          }
+        },
+        "description": "Метаданные шаблона, используемые в списках (без разделов и пунктов)"
+      },
+      "ListOrganizations200Response": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrganizationResponseDto" }
+          },
+          "totalElements": { "type": "integer", "format": "int32" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "number": { "type": "integer", "format": "int32" }
+        }
+      },
+      "ListPositions200Response": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PositionResponseDto" }
+          },
+          "totalElements": { "type": "integer", "format": "int32" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "number": { "type": "integer", "format": "int32" }
+        }
+      },
+      "ListControlObjectsByOrganization200Response": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ControlObjectResponseDto" }
+          },
+          "totalElements": { "type": "integer", "format": "int32" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "number": { "type": "integer", "format": "int32" }
+        }
+      },
+      "ItemMetadataResponse": {
+        "required": ["question_types", "version"],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "Версия структуры",
+            "example": "1.0"
+          },
+          "question_types": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ItemMetadataResponseQuestionTypesValue"
+            },
+            "description": "Словарь типов вопросов, ключ — идентификатор типа вопроса"
+          }
+        },
+        "description": "Справочник поддерживаемых типов вопросов и их схем настроек"
+      },
+      "ItemMetadataResponseQuestionTypesValue": {
+        "required": ["label", "settings_schema"],
+        "type": "object",
+        "properties": {
+          "tingsSchema": {
+            "$ref": "#/components/schemas/ItemMetadataResponseQuestionTypesValue"
+          },
+          "label": { "type": "string" },
+          "description": { "type": "string" },
+          "labelEn": { "type": "string" },
+          "descriptionEn": { "type": "string" },
+          "frontend_param_name": {
+            "type": "string",
+            "description": "Имя параметра, используемое на фронтенде"
+          },
+          "settings_schema": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "description": "Схема настроек типа вопроса (JSON Schema или аналог)"
+            },
+            "description": "Схема настроек типа вопроса (JSON Schema или аналог)"
+          }
+        },
+        "description": "Описание одного типа вопроса"
+      },
+      "InspectionScheduleShortDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Уникальный идентификатор календаря проверок",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "Наименование календаря проверок"
+          },
+          "description": {
+            "type": "string",
+            "description": "Описание календаря проверок"
+          },
+          "eventAt": {
+            "type": "string",
+            "description": "Дата и время события (UTC). Значение в ISO 8601 с суффиксом 'Z', пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "template": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "controlObject": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "inspectors": {
+            "type": "array",
+            "description": "Список проверяющих, которым назначаются проверки. Если массив пуст или отсутствует — проверки назначаются всем пользователям. ",
+            "items": { "$ref": "#/components/schemas/ObjectNameOnlyDto" }
+          },
+          "scheduleType": {
+            "type": "string",
+            "description": "Наименование типа расписания"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Признак активности календаря проверок"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Дата и время создания записи в UTC (ISO 8601), пример: 2026-01-31T09:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T09:00:00Z"
+          }
+        },
+        "description": "Полная информация о календаре проверок"
+      },
+      "ListInspectionSchedules200Response": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InspectionScheduleShortDto"
+            }
+          },
+          "totalElements": {
+            "type": "integer",
+            "description": "Общее количество элементов",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "description": "Общее количество страниц",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "description": "Размер страницы",
+            "format": "int32"
+          },
+          "number": {
+            "type": "integer",
+            "description": "Номер текущей страницы (начиная с 0)",
+            "format": "int32"
+          }
+        }
+      },
+      "EnumValueDto": {
+        "required": ["code", "labelEn", "labelRu"],
+        "type": "object",
+        "properties": {
+          "code": { "type": "string", "description": "Код enum-значения" },
+          "labelRu": { "type": "string", "description": "Русская подпись" },
+          "labelEn": { "type": "string", "description": "Английская подпись" }
+        }
+      },
+      "InspectionScheduleEnumsResponse": {
+        "type": "object",
+        "properties": {
+          "scheduleType": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EnumValueDto" }
+          },
+          "endType": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EnumValueDto" }
+          },
+          "repeatMode": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EnumValueDto" }
+          },
+          "weekday": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EnumValueDto" }
+          },
+          "ordinal": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EnumValueDto" }
+          },
+          "month": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EnumValueDto" }
+          }
+        },
+        "description": "Контейнер со списками значений enum, используемых в расписаниях"
+      },
+      "DbHealthDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "Статус доступности базы данных. true — доступна, false — недоступна."
+          },
+          "responseTimeMs": {
+            "type": "integer",
+            "description": "Время отклика базы данных в миллисекундах.",
+            "format": "int64"
+          }
+        }
+      },
+      "ChecklistShortDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "inspectionSchedule": {
+            "$ref": "#/components/schemas/ObjectNameOnlyDto"
+          },
+          "template": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "controlObject": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "inspector": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "user": { "$ref": "#/components/schemas/ObjectNameOnlyDto" },
+          "status": { "$ref": "#/components/schemas/ChecklistStatus" },
+          "start_at": {
+            "type": "string",
+            "description": "Дата и время начала проверки в UTC (ISO 8601), пример: 2026-01-31T10:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T10:00:00Z"
+          },
+          "end_at": {
+            "type": "string",
+            "description": "Дата и время окончания проверки в UTC (ISO 8601), пример: 2026-01-31T11:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T11:00:00Z"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Дата и время создания записи в UTC (ISO 8601), пример: 2026-01-31T09:00:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T09:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Дата и время последнего обновления записи в UTC (ISO 8601), пример: 2026-01-31T09:30:00Z",
+            "format": "date-time",
+            "example": "2026-01-31T09:30:00Z"
+          }
+        }
+      },
+      "GetChecklists200Response": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ChecklistShortDto" }
+          },
+          "totalElements": { "type": "integer", "format": "int32" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "number": { "type": "integer", "format": "int32" }
+        }
+      },
+      "AuditMethodDto": {
+        "required": ["code", "name"],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Код метода (пример: ChecklistController.createChecklist)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Короткое локализованное название метода в зависимости от локали пользователя"
+          }
+        },
+        "description": "Код метода контроллера и локализованное имя (в поле `name`) — язык определяется по локали пользователя"
+      },
+      "ListRequestLogs200Response": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RequestLogShortDto" }
+          },
+          "totalElements": { "type": "integer", "format": "int32" },
+          "totalPages": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "number": { "type": "integer", "format": "int32" }
+        }
+      },
+      "RequestLogShortDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "eventTime": { "type": "string", "format": "date-time" },
+          "username": { "type": "string" },
+          "method": { "type": "string" },
+          "url": { "type": "string" },
+          "controllerMethod": { "type": "string" },
+          "controllerMethodName": { "type": "string" },
+          "statusCode": { "type": "integer", "format": "int32" },
+          "success": { "type": "boolean" },
+          "durationMs": { "type": "integer", "format": "int32" },
+          "clientIp": { "type": "string" },
+          "requestTruncated": { "type": "boolean" },
+          "responseTruncated": { "type": "boolean" }
+        }
+      },
+      "RequestLogDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "eventTime": { "type": "string", "format": "date-time" },
+          "username": { "type": "string" },
+          "method": { "type": "string" },
+          "url": { "type": "string" },
+          "controllerMethod": { "type": "string" },
+          "controllerMethodName": { "type": "string" },
+          "requestBody": { "type": "string" },
+          "responseBody": { "type": "string" },
+          "statusCode": { "type": "integer", "format": "int32" },
+          "success": { "type": "boolean" },
+          "durationMs": { "type": "integer", "format": "int32" },
+          "clientIp": { "type": "string" },
+          "requestTruncated": { "type": "boolean" },
+          "responseTruncated": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}
