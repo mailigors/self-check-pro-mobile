@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/layout/breakpoints.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_confirm_sheet.dart';
+import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_icon.dart';
 import '../../../../core/widgets/app_tag.dart';
 import '../../domain/checklist_models.dart';
@@ -161,7 +162,7 @@ class _FillingScreenState extends ConsumerState<FillingScreen> {
               ),
               data: (state) => Column(
                 children: [
-                  _Header(
+                  AppHeader(
                     title: state.summary.title,
                     onBack: () => _handleBack(state),
                     onProfile: () => context.go('/profile'),
@@ -180,64 +181,6 @@ class _FillingScreenState extends ConsumerState<FillingScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.title, required this.onBack, required this.onProfile});
-
-  final String title;
-  final VoidCallback onBack;
-  final VoidCallback onProfile;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
-      ),
-      child: Row(
-        children: [
-          InkWell(
-            onTap: onBack,
-            borderRadius: BorderRadius.circular(12),
-            child: const SizedBox(
-              width: 24,
-              height: 24,
-              child: AppIcon(AppIcon.back, size: 24),
-            ),
-          ),
-          const SizedBox(width: 24),
-          Expanded(
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                height: 20 / 16,
-                fontWeight: FontWeight.w500,
-                color: AppColors.text,
-              ),
-            ),
-          ),
-          const SizedBox(width: 24),
-          InkWell(
-            onTap: onProfile,
-            borderRadius: BorderRadius.circular(12),
-            child: const SizedBox(
-              width: 24,
-              height: 24,
-              child: AppIcon(AppIcon.user, size: 24),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -306,7 +249,7 @@ class _Meta extends StatelessWidget {
             Expanded(
               child: Text(
                 meta,
-                style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textSecondary),
+                style: AppText.bodyH4(),
               ),
             ),
             AppTag(label: ui.label, tone: ui.tone),
@@ -317,20 +260,12 @@ class _Meta extends StatelessWidget {
           children: [
             Text(
               'Прогресс заполнения',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.text,
-              ),
+              style: AppText.bodyH4(color: AppColors.text).copyWith(fontWeight: FontWeight.w500),
             ),
             const Spacer(),
             Text(
               '$answered из $total',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.brand,
-              ),
+              style: AppText.bodyH4(color: AppColors.brand).copyWith(fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -348,7 +283,7 @@ class _Meta extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Есть несохранённые изменения',
-            style: GoogleFonts.poppins(fontSize: 12, color: AppColors.warning),
+            style: AppText.bodyH5(color: AppColors.warning),
           ),
         ],
         if (state.summary.startAt != null || state.summary.endAt != null) ...[
@@ -360,7 +295,7 @@ class _Meta extends StatelessWidget {
               if (state.summary.endAt != null)
                 DateFormat('d MMM, HH:mm', 'ru').format(state.summary.endAt!.toLocal()),
             ].join(' — '),
-            style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+            style: AppText.bodyH5(),
           ),
         ],
       ],
@@ -416,16 +351,12 @@ class _SectionBlock extends ConsumerWidget {
                       section.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.text,
-                      ),
+                      style: AppText.headlineH5(),
                     ),
                   ),
                   Text(
                     '$answered/${section.items.length}',
-                    style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textSecondary),
+                    style: AppText.bodyH4(),
                   ),
                 ],
               ),

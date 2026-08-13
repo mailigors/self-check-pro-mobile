@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_text.dart';
 
 enum AppButtonVariant { primary, secondary, danger }
 
@@ -24,18 +24,21 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null && !loading;
-    final (bg, fg) = switch (variant) {
+    final (Color bg, Color fg, Color? border) = switch (variant) {
       AppButtonVariant.primary => (
-          enabled ? AppColors.brand : AppColors.brand.withValues(alpha: 0.4),
-          AppColors.surface,
+          enabled ? AppColors.brand : AppColors.background,
+          enabled ? AppColors.surface : AppColors.placeholder,
+          null,
         ),
       AppButtonVariant.secondary => (
-          AppColors.background,
-          enabled ? AppColors.text : AppColors.textSecondary,
+          AppColors.surface,
+          enabled ? AppColors.text : AppColors.placeholder,
+          AppColors.border,
         ),
       AppButtonVariant.danger => (
           const Color(0xFFFFF0F0),
           AppColors.error,
+          null,
         ),
     };
 
@@ -43,7 +46,10 @@ class AppButton extends StatelessWidget {
       height: 56,
       child: Material(
         color: bg,
-        borderRadius: BorderRadius.circular(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: border == null ? BorderSide.none : BorderSide(color: border),
+        ),
         child: InkWell(
           onTap: enabled ? onPressed : null,
           borderRadius: BorderRadius.circular(16),
@@ -52,21 +58,13 @@ class AppButton extends StatelessWidget {
                 ? SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: fg,
-                    ),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: fg),
                   )
                 : Text(
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      height: 20 / 16,
-                      fontWeight: FontWeight.w500,
-                      color: fg,
-                    ),
+                    style: AppText.headlineH5(color: fg),
                   ),
           ),
         ),

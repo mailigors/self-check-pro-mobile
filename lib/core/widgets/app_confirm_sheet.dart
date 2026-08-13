@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_text.dart';
 import 'app_button.dart';
 
 Future<bool?> showAppConfirmSheet({
@@ -24,7 +24,7 @@ Future<bool?> showAppConfirmSheet({
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
           decoration: const BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -41,21 +41,13 @@ Future<bool?> showAppConfirmSheet({
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text,
-                ),
+                style: AppText.titleH2(),
               ),
               const SizedBox(height: 8),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  height: 1.4,
-                  color: AppColors.textSecondary,
-                ),
+                style: AppText.bodyH4(),
               ),
               const SizedBox(height: 20),
               Row(

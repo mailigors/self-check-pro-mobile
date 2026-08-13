@@ -1,12 +1,12 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text.dart';
 import '../../../../core/widgets/app_icon.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../domain/checklist_models.dart';
@@ -48,7 +48,7 @@ class ItemAnswerCard extends ConsumerWidget {
             const SizedBox(height: 4),
             Text(
               item.description!,
-              style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary),
+              style: AppText.bodyH4(),
             ),
           ],
           const SizedBox(height: 8),
@@ -71,7 +71,7 @@ class ItemAnswerCard extends ConsumerWidget {
                   const SizedBox(width: 6),
                   Text(
                     'Требуется фото',
-                    style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+                    style: AppText.bodyH5(),
                   ),
                 ],
                 if (item.videoRequired) ...[
@@ -80,7 +80,7 @@ class ItemAnswerCard extends ConsumerWidget {
                   const SizedBox(width: 6),
                   Text(
                     'Требуется видео',
-                    style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+                    style: AppText.bodyH5(),
                   ),
                 ],
               ],
@@ -101,7 +101,7 @@ class ItemAnswerCard extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     error!,
-                    style: GoogleFonts.poppins(fontSize: 12, color: AppColors.error),
+                    style: AppText.bodyH5(color: AppColors.error),
                   ),
                 ),
               ],
@@ -125,21 +125,13 @@ class _Label extends StatelessWidget {
         Flexible(
           child: Text(
             item.name,
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: AppColors.text,
-            ),
+            style: AppText.headlineH5(),
           ),
         ),
         if (item.required)
           Text(
             ' *',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: AppColors.error,
-            ),
+            style: AppText.headlineH5(color: AppColors.error),
           ),
       ],
     );
@@ -208,7 +200,7 @@ class _Control extends ConsumerWidget {
                     if (item.settings.minValue != null) 'мин ${item.settings.minValue}',
                     if (item.settings.maxValue != null) 'макс ${item.settings.maxValue}',
                   ].join('   ·   '),
-                  style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary),
+                  style: AppText.bodyH5(),
                 ),
               ),
           ],
@@ -243,7 +235,15 @@ class _Control extends ConsumerWidget {
             decoration: InputDecoration(
               filled: true,
               fillColor: AppColors.surface,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              hintStyle: AppText.bodyH3(color: AppColors.placeholder),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.border, width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.brand, width: 1),
+              ),
             ),
           );
         }
@@ -344,17 +344,18 @@ class _Boolean extends StatelessWidget {
       onTap: readOnly ? null : () => onChanged(selected ? null : option),
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: selected ? AppColors.brandSoft : AppColors.background,
+          color: selected ? AppColors.brandSoft : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
-          border: selected ? Border.all(color: AppColors.brand) : null,
+          border: Border.all(color: selected ? AppColors.brand : AppColors.border),
         ),
         child: Row(
           children: [
             Container(
-              width: 20,
-              height: 20,
+              width: 24,
+              height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.surface,
@@ -363,8 +364,8 @@ class _Boolean extends StatelessWidget {
               child: selected
                   ? Center(
                       child: Container(
-                        width: 14,
-                        height: 14,
+                        width: 12,
+                        height: 12,
                         decoration: const BoxDecoration(
                           color: AppColors.brand,
                           shape: BoxShape.circle,
@@ -376,11 +377,7 @@ class _Boolean extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               label,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: selected ? AppColors.brand : AppColors.text,
-              ),
+              style: AppText.bodyH4(color: selected ? AppColors.brand : AppColors.text),
             ),
           ],
         ),
@@ -420,8 +417,8 @@ class _ChoiceRow extends StatelessWidget {
           children: [
             if (kind == _ChoiceKind.radio)
               Container(
-                width: 20,
-                height: 20,
+                width: 24,
+                height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.surface,
@@ -430,8 +427,8 @@ class _ChoiceRow extends StatelessWidget {
                 child: selected
                     ? Center(
                         child: Container(
-                          width: 14,
-                          height: 14,
+                          width: 12,
+                          height: 12,
                           decoration: const BoxDecoration(
                             color: AppColors.brand,
                             shape: BoxShape.circle,
@@ -442,8 +439,8 @@ class _ChoiceRow extends StatelessWidget {
               )
             else
               Container(
-                width: 20,
-                height: 20,
+                width: 24,
+                height: 24,
                 decoration: BoxDecoration(
                   color: selected ? AppColors.brand : AppColors.surface,
                   borderRadius: BorderRadius.circular(4),
@@ -457,7 +454,7 @@ class _ChoiceRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: GoogleFonts.poppins(fontSize: 14, color: AppColors.text),
+                style: AppText.bodyH4(color: AppColors.text),
               ),
             ),
           ],
@@ -490,7 +487,7 @@ class _SliderField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(start ?? '${min.round()}', style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary)),
+        Text(start ?? '${min.round()}', style: AppText.bodyH5()),
         Expanded(
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
@@ -508,7 +505,7 @@ class _SliderField extends StatelessWidget {
             ),
           ),
         ),
-        Text(end ?? '${max.round()}', style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textSecondary)),
+        Text(end ?? '${max.round()}', style: AppText.bodyH5()),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
@@ -518,11 +515,7 @@ class _SliderField extends StatelessWidget {
           ),
           child: Text(
             '${value.round()}',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.brand,
-            ),
+            style: AppText.bodyH4(color: AppColors.brand).copyWith(fontWeight: FontWeight.w500),
           ),
         ),
       ],
@@ -726,7 +719,7 @@ class _Attachments extends ConsumerWidget {
                       const SizedBox(width: 6),
                       Text(
                         file.filename ?? 'файл ${file.attachmentId}',
-                        style: GoogleFonts.poppins(fontSize: 12),
+                        style: AppText.bodyH5(color: AppColors.text),
                       ),
                       if (!readOnly) ...[
                         const SizedBox(width: 6),

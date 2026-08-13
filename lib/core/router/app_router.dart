@@ -9,6 +9,7 @@ import '../../features/checklists/presentation/list/checklists_list_screen.dart'
 import '../../features/profile/presentation/profile_screen.dart';
 import '../layout/breakpoints.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_text.dart';
 import '../widgets/app_icon.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
@@ -99,7 +100,7 @@ class AppShell extends StatelessWidget {
               labelType: NavigationRailLabelType.all,
               backgroundColor: AppColors.surface,
               selectedIconTheme: const IconThemeData(color: AppColors.brand),
-              selectedLabelTextStyle: const TextStyle(color: AppColors.brand),
+              selectedLabelTextStyle: AppText.bodyH5(color: AppColors.brand),
               destinations: const [
                 NavigationRailDestination(
                   icon: AppIcon(AppIcon.file, size: 24),

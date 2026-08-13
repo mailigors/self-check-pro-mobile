@@ -3,12 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/layout/breakpoints.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text.dart';
+import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_icon.dart';
 import '../../../../core/widgets/app_tag.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -112,51 +113,25 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authControllerProvider).valueOrNull?.user;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: AppPage(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Чек-листы',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.go('/profile'),
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundColor: AppColors.brandSoft,
-                        child: Text(
-                          user?.initials ?? 'U',
-                          style: GoogleFonts.poppins(
-                            color: AppColors.brand,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              AppHeader(
+                title: 'Чек-листы',
+                onProfile: () => context.go('/profile'),
               ),
+              const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child:                 AppTextField(
+                child: AppTextField(
                   controller: _search,
                   hint: 'Поиск',
                   prefix: const Padding(
                     padding: EdgeInsets.all(12),
-                    child: AppIcon(AppIcon.search, size: 24),
+                    child: AppIcon(AppIcon.search, size: 24, color: AppColors.textSecondary),
                   ),
                   onChanged: (_) {
                     _searchDebounce?.cancel();
@@ -199,18 +174,19 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
       child: ChoiceChip(
         label: Text(label),
         selected: selected,
+        showCheckmark: false,
         onSelected: (_) {
           setState(() => _filter = value);
           _reload();
         },
         selectedColor: AppColors.brand,
-        backgroundColor: AppColors.background,
-        labelStyle: GoogleFonts.poppins(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
+        backgroundColor: AppColors.surface,
+        labelStyle: AppText.bodyH4(
           color: selected ? AppColors.surface : AppColors.text,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+        visualDensity: VisualDensity.compact,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         side: BorderSide.none,
       ),
     );
@@ -238,7 +214,7 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
           Text(
             'Назначенных чек-листов пока нет',
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(color: AppColors.textSecondary),
+            style: AppText.bodyH4(),
           ),
         ],
       );
@@ -289,14 +265,14 @@ class _Card extends StatelessWidget {
     final date = [start, end].whereType<String>().join(' — ');
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onOpen,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.borderSubtle),
           ),
           child: Column(
@@ -309,10 +285,7 @@ class _Card extends StatelessWidget {
                       item.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: AppText.headlineH5(),
                     ),
                   ),
                   AppTag(label: ui.label, tone: ui.tone),
@@ -326,28 +299,21 @@ class _Card extends StatelessWidget {
                     .join(' · '),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary),
+                style: AppText.bodyH4(),
               ),
               const Spacer(),
-              Text(
-                date,
-                style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textSecondary),
-              ),
+              Text(date, style: AppText.bodyH4()),
               if (ui.actionLabel != null) ...[
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
                     color: AppColors.brand,
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
                     ui.actionLabel!,
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.surface,
-                    ),
+                    style: AppText.bodyH4(color: AppColors.surface),
                   ),
                 ),
               ],

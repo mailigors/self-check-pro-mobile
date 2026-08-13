@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import 'auth_controller.dart';
@@ -19,8 +20,16 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  bool _obscure = true;
   String? _error;
+
+  bool get _canSubmit => _email.text.trim().isNotEmpty && _password.text.isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    _email.addListener(() => setState(() {}));
+    _password.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
@@ -30,6 +39,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
+    if (!_canSubmit) return;
     setState(() => _error = null);
     try {
       await ref.read(authControllerProvider.notifier).login(
@@ -51,71 +61,64 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final loading = auth.isLoading;
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: AppPage(
-          maxWidth: 480,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
-            children: [
-              Text(
-                'Self-Check Pro',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text,
+      body: AppPage(
+        maxWidth: 480,
+        child: Column(
+          children: [
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 24),
+                child: SvgPicture.asset(
+                  'assets/images/logo.svg',
+                  height: 36,
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Вход',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+                decoration: const BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(40),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
                 ),
-                child: Column(
-                  children: [
-                    AppTextField(
-                      label: 'Логин',
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                      hint: 'email@example.com',
-                    ),
-                    const SizedBox(height: 16),
-                    AppTextField(
-                      label: 'Пароль',
-                      controller: _password,
-                      obscureText: _obscure,
-                      hint: 'Пароль',
-                      errorText: _error,
-                      suffix: IconButton(
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                        icon: Icon(
-                          _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                          color: AppColors.textSecondary,
-                        ),
+                child: SafeArea(
+                  top: false,
+                  child: ListView(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text('Вход', style: AppText.titleH1()),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    AppButton(
-                      label: 'Войти',
-                      loading: loading,
-                      onPressed: loading ? null : _submit,
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+                      AppTextField(
+                        label: 'Логин',
+                        controller: _email,
+                        keyboardType: TextInputType.emailAddress,
+                        hint: 'Введите логин',
+                      ),
+                      const SizedBox(height: 16),
+                      AppTextField(
+                        label: 'Пароль',
+                        controller: _password,
+                        obscureText: true,
+                        hint: 'Введите пароль',
+                        errorText: _error,
+                      ),
+                      const SizedBox(height: 24),
+                      AppButton(
+                        label: 'Войти',
+                        loading: loading,
+                        onPressed: loading || !_canSubmit ? null : _submit,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

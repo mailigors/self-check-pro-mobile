@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_text.dart';
 
 enum AppTagTone { success, brand, warning, error, draft }
 
@@ -28,14 +28,7 @@ class AppTag extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       alignment: Alignment.center,
-      child: Text(
-        label,
-        style: GoogleFonts.poppins(
-          fontSize: 12,
-          height: 16 / 12,
-          color: AppColors.surface,
-        ),
-      ),
+      child: Text(label, style: AppText.bodyH5(color: AppColors.surface)),
     );
   }
 }
