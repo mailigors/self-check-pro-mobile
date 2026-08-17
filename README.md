@@ -13,9 +13,9 @@ Flutter-приложение исполнителя. Web-сборка публи
 
 На iPhone: открыть этот URL в **Safari** → Поделиться → **На экран «Домой»**.
 
-Адрес API задаётся переменной репозитория **Settings → Secrets and variables → Actions → Variables → `API_ORIGIN`**. Если её нет, используется `http://185.108.211.9:3002`.
+Адрес API задаётся переменной репозитория **Settings → Secrets and variables → Actions → Variables → `API_ORIGIN`**. Если её нет, используется `https://185.108.211.9:3002`.
 
-GitHub Pages отдаёт сайт по HTTPS. Браузер заблокирует запросы к HTTP API (mixed content), пока бэкенд не будет доступен по HTTPS. На бэкенде также нужен CORS для origin GitHub Pages:
+На бэкенде нужен CORS для origin GitHub Pages:
 
 ```
 Access-Control-Allow-Origin: https://<user>.github.io
