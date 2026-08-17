@@ -1,12 +1,14 @@
 {
-    "name": "checklist_flutter",
-    "short_name": "checklist_flutter",
+    "name": "Self-Check Pro",
+    "short_name": "Self-Check",
     "start_url": ".",
+    "scope": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F6F8F9",
+    "theme_color": "#39A6FF",
+    "description": "Self-Check Pro — прохождение чек-листов",
     "orientation": "portrait-primary",
+    "lang": "ru",
     "prefer_related_applications": false,
     "icons": [
         {

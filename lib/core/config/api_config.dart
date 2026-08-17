@@ -1,5 +1,8 @@
 class ApiConfig {
-  static const backendOrigin = 'http://185.108.211.9:3002';
+  static const backendOrigin = String.fromEnvironment(
+    'API_ORIGIN',
+    defaultValue: 'http://185.108.211.9:3002',
+  );
   static const apiPath = '/api/v1';
   static const baseUrl = '$backendOrigin$apiPath';
 

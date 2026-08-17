@@ -29,6 +29,10 @@ final tokenStorageProvider = Provider<TokenStorage>((ref) {
   return TokenStorage(
     const FlutterSecureStorage(
       aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      webOptions: WebOptions(
+        dbName: 'self_check_pro',
+        publicKey: 'selfCheckProKey',
+      ),
     ),
   );
 });

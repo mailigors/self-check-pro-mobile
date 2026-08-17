@@ -1,17 +1,31 @@
-# checklist_flutter
+# Self-Check Pro
 
-A new Flutter project.
+Flutter-приложение исполнителя. Web-сборка публикуется на GitHub Pages как PWA.
 
-## Getting Started
+## GitHub Pages
 
-This project is a starting point for a Flutter application.
+После пуша в `main` workflow собирает `flutter build web` и выкладывает `build/web`.
 
-A few resources to get you started if this is your first Flutter project:
+1. Залейте репозиторий на GitHub (имя репозитория попадёт в URL).
+2. **Settings → Pages → Build and deployment → Source:** GitHub Actions.
+3. Дождитесь workflow **Deploy GitHub Pages**.
+4. Сайт будет по адресу `https://<user>.github.io/<repo>/`.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+На iPhone: открыть этот URL в **Safari** → Поделиться → **На экран «Домой»**.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Адрес API задаётся переменной репозитория **Settings → Secrets and variables → Actions → Variables → `API_ORIGIN`**. Если её нет, используется `http://185.108.211.9:3002`.
+
+GitHub Pages отдаёт сайт по HTTPS. Браузер заблокирует запросы к HTTP API (mixed content), пока бэкенд не будет доступен по HTTPS. На бэкенде также нужен CORS для origin GitHub Pages:
+
+```
+Access-Control-Allow-Origin: https://<user>.github.io
+Access-Control-Allow-Headers: Authorization, Content-Type
+Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
+```
+
+Локальная проверка той же сборки:
+
+```bash
+flutter build web --release --base-href /checklist_flutter/ --no-web-resources-cdn
+python3 -m http.server 8080 --directory build/web
+```
