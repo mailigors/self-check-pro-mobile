@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client.dart';
@@ -20,7 +21,7 @@ class AuthRepositoryImpl implements AuthRepository {
     final tokens = await _api.post<Map<String, dynamic>>(
       '/auth/login',
       data: {'email': email, 'password': password},
-      options: null,
+      options: Options(extra: {'skipAuth': true}),
       parser: asMap,
     );
     final access = asString(tokens['accessToken']);

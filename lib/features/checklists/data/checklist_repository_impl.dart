@@ -25,7 +25,7 @@ class ChecklistRepositoryImpl implements ChecklistRepository {
         'user_id': userId,
         'page': page,
         'size': 20,
-        'sort': 'start_at,desc',
+        // 'sort': 'start_at,desc',
         'q': ?(query == null || query.isEmpty ? null : query),
         'status': ?status,
       },
