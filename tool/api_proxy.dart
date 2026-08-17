@@ -4,7 +4,7 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 
-const backendOrigin = 'https://185.108.211.9:8081';
+const backendOrigin = 'https://185.108.211.9';
 const proxyPort = 3001;
 
 const _hopByHop = {
