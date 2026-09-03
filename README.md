@@ -13,7 +13,7 @@ Flutter-приложение исполнителя. Web-сборка публи
 
 На iPhone: открыть этот URL в **Safari** → Поделиться → **На экран «Домой»**.
 
-Адрес API задаётся переменной репозитория **Settings → Secrets and variables → Actions → Variables → `API_ORIGIN`**. Если её нет, используется `https://185.108.211.9:3002`.
+Адрес API задаётся переменной репозитория **Settings → Secrets and variables → Actions → Variables → `API_ORIGIN`**. Если её нет, используется `https://selfcheck.pro`.
 
 На бэкенде нужен CORS для origin GitHub Pages:
 

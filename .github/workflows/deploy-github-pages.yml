@@ -42,7 +42,7 @@ jobs:
         env:
           API_ORIGIN: ${{ vars.API_ORIGIN }}
         run: |
-          ORIGIN="${API_ORIGIN:-https://185.108.211.9}"
+          ORIGIN="${API_ORIGIN:-https://selfcheck.pro}"
           flutter build web --release \
             --base-href "${{ steps.base.outputs.href }}" \
             --no-web-resources-cdn \
