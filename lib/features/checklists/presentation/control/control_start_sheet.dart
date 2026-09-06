@@ -231,9 +231,9 @@ class _ControlStartSheetState extends ConsumerState<_ControlStartSheet> {
               onChanged: _onSearchChanged,
             ),
             const SizedBox(height: 12),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 360),
-              child: Flexible(child: _list()),
+            SizedBox(
+              height: 360,
+              child: _list(),
             ),
             if (_error != null) ...[
               const SizedBox(height: 8),
