@@ -454,3 +454,108 @@ class PagedChecklists {
     );
   }
 }
+
+/// Метаданные шаблона из списка `GET /templates` (без разделов и пунктов).
+class TemplateListItem {
+  const TemplateListItem({
+    required this.id,
+    required this.name,
+    this.description,
+    this.active = true,
+  });
+
+  final int id;
+  final String name;
+  final String? description;
+  final bool active;
+
+  factory TemplateListItem.fromJson(Map<String, dynamic> json) {
+    return TemplateListItem(
+      id: asInt(json['id']) ?? 0,
+      name: asString(json['name']) ?? '',
+      description: asString(json['description']),
+      active: asBool(json['active']) ?? true,
+    );
+  }
+}
+
+class PagedTemplates {
+  const PagedTemplates({
+    required this.items,
+    required this.page,
+    required this.totalPages,
+  });
+
+  final List<TemplateListItem> items;
+  final int page;
+  final int totalPages;
+
+  bool get hasMore => page + 1 < totalPages;
+
+  factory PagedTemplates.fromJson(Map<String, dynamic> json) {
+    return PagedTemplates(
+      items: asList(json['content'])
+          .map((item) => TemplateListItem.fromJson(asMap(item)))
+          .toList(),
+      page: asInt(json['number']) ?? 0,
+      totalPages: asInt(json['totalPages']) ?? 1,
+    );
+  }
+}
+
+/// Объект контроля из `GET /control-objects`.
+class ControlObject {
+  const ControlObject({
+    required this.id,
+    required this.name,
+    this.email,
+    this.phone,
+    this.address,
+    this.organizationId,
+    this.active = true,
+  });
+
+  final int id;
+  final String name;
+  final String? email;
+  final String? phone;
+  final String? address;
+  final int? organizationId;
+  final bool active;
+
+  factory ControlObject.fromJson(Map<String, dynamic> json) {
+    return ControlObject(
+      id: asInt(json['id']) ?? 0,
+      name: asString(json['name']) ?? '',
+      email: asString(json['email']),
+      phone: asString(json['phone']),
+      address: asString(json['address']),
+      organizationId: asInt(json['organizationId']),
+      active: asBool(json['active']) ?? true,
+    );
+  }
+}
+
+class PagedControlObjects {
+  const PagedControlObjects({
+    required this.items,
+    required this.page,
+    required this.totalPages,
+  });
+
+  final List<ControlObject> items;
+  final int page;
+  final int totalPages;
+
+  bool get hasMore => page + 1 < totalPages;
+
+  factory PagedControlObjects.fromJson(Map<String, dynamic> json) {
+    return PagedControlObjects(
+      items: asList(json['content'])
+          .map((item) => ControlObject.fromJson(asMap(item)))
+          .toList(),
+      page: asInt(json['number']) ?? 0,
+      totalPages: asInt(json['totalPages']) ?? 1,
+    );
+  }
+}

@@ -25,4 +25,17 @@ abstract class ChecklistRepository {
     required List<int> bytes,
     required String contentType,
   });
+
+  /// Список шаблонов чек-листов (без разделов и пунктов).
+  Future<PagedTemplates> listTemplates({String? query, int page = 0});
+
+  /// Список объектов контроля.
+  Future<PagedControlObjects> listControlObjects({String? query, int page = 0});
+
+  /// Создание чек-листа и немедленный перевод в работу (статус IN_WORK).
+  /// Возвращает созданный чек-лист (ChecklistDto) для заполнения.
+  Future<ChecklistSummary> startChecklist({
+    required int templateId,
+    required int controlObjectId,
+  });
 }

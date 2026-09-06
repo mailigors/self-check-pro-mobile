@@ -119,6 +119,48 @@ class ChecklistRepositoryImpl implements ChecklistRepository {
       parser: (data) => AttachmentRef.fromJson(asMap(data)),
     );
   }
+
+  @override
+  Future<PagedTemplates> listTemplates({String? query, int page = 0}) {
+    return _api.get(
+      '/templates',
+      query: {
+        'page': page,
+        'size': 50,
+        'active': true,
+        if (query != null && query.isNotEmpty) 'q': query,
+      },
+      parser: (data) => PagedTemplates.fromJson(asMap(data)),
+    );
+  }
+
+  @override
+  Future<PagedControlObjects> listControlObjects({String? query, int page = 0}) {
+    return _api.get(
+      '/control-objects',
+      query: {
+        'page': page,
+        'size': 50,
+        if (query != null && query.isNotEmpty) 'q': query,
+      },
+      parser: (data) => PagedControlObjects.fromJson(asMap(data)),
+    );
+  }
+
+  @override
+  Future<ChecklistSummary> startChecklist({
+    required int templateId,
+    required int controlObjectId,
+  }) {
+    return _api.post(
+      '/checklists/start',
+      data: {
+        'template_id': templateId,
+        'control_object_id': controlObjectId,
+      },
+      parser: (data) => ChecklistSummary.fromJson(asMap(data)),
+    );
+  }
 }
 
 final checklistRepositoryProvider = Provider<ChecklistRepository>((ref) {

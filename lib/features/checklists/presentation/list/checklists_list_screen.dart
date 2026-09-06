@@ -9,6 +9,7 @@ import '../../../../core/layout/breakpoints.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/app_icon.dart';
 import '../../../../core/widgets/app_tag.dart';
@@ -16,6 +17,7 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../../auth/presentation/auth_controller.dart';
 import '../../data/checklist_repository_impl.dart';
 import '../../domain/checklist_models.dart';
+import '../control/control_start_sheet.dart';
 
 enum ListFilter { all, inWork, done, waiting }
 
@@ -111,6 +113,14 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
     }
   }
 
+  Future<void> _startControl() async {
+    final newId = await showControlStartSheet(context: context, ref: ref);
+    if (newId == null) return;
+    if (!mounted) return;
+    await context.push('/checklists/$newId');
+    _reload();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,6 +132,14 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
               AppHeader(
                 title: 'Чек-листы',
                 onProfile: () => context.go('/profile'),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: AppButton(
+                  label: 'Контроль',
+                  onPressed: _startControl,
+                ),
               ),
               const SizedBox(height: 16),
               Padding(
