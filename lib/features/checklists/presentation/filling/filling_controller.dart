@@ -107,6 +107,18 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
     state = AsyncData(current.copyWith(answers: answers, errors: errors, dirty: true));
   }
 
+  void setComment(int itemId, {required String? comment}) {
+    final current = _require;
+    if (current.readOnly) return;
+    final prev = current.answers[itemId] ?? const ItemAnswer();
+    final answers = Map<int, ItemAnswer>.from(current.answers)
+      ..[itemId] = prev.copyWith(
+        comment: comment,
+        clearComment: comment == null,
+      );
+    state = AsyncData(current.copyWith(answers: answers, dirty: true));
+  }
+
   void expandSectionsForItems(Iterable<int> itemIds) {
     final current = _require;
     final next = {...current.expandedSectionIds};

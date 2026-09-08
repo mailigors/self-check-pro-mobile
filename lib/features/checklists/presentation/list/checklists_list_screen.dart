@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/files/save_downloaded_file.dart';
 import '../../../../core/layout/breakpoints.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -38,6 +39,8 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
   String? _error;
   int _page = 0;
   bool _hasMore = false;
+  int? _exportingId;
+  ChecklistExportFormat? _exportingFormat;
 
   @override
   void initState() {
@@ -119,6 +122,34 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
     if (!mounted) return;
     await context.push('/checklists/$newId');
     _reload();
+  }
+
+  Future<void> _export(ChecklistSummary item, ChecklistExportFormat format) async {
+    if (_exportingId != null) return;
+    setState(() {
+      _exportingId = item.id;
+      _exportingFormat = format;
+    });
+    try {
+      final file = await ref.read(checklistRepositoryProvider).export(item.id, format);
+      await saveDownloadedFile(bytes: file.bytes, filename: file.filename);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is ApiException ? error.message : 'Не удалось скачать ${format.label}',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _exportingId = null;
+          _exportingFormat = null;
+        });
+      }
+    }
   }
 
   @override
@@ -251,25 +282,43 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
-          mainAxisExtent: 196,
+          mainAxisExtent: 220,
           crossAxisSpacing: 16,
           mainAxisSpacing: 14,
         ),
         itemCount: _items.length,
-        itemBuilder: (context, index) => _Card(
-          item: _items[index],
-          onOpen: () => _open(_items[index]),
-        ),
+        itemBuilder: (context, index) {
+          final item = _items[index];
+          return _Card(
+            item: item,
+            onOpen: () => _open(item),
+            onExportPdf: () => _export(item, ChecklistExportFormat.pdf),
+            onExportExcel: () => _export(item, ChecklistExportFormat.excel),
+            exportLocked: _exportingId != null,
+            exportingFormat: _exportingId == item.id ? _exportingFormat : null,
+          );
+        },
       ),
     );
   }
 }
 
 class _Card extends StatelessWidget {
-  const _Card({required this.item, required this.onOpen});
+  const _Card({
+    required this.item,
+    required this.onOpen,
+    required this.onExportPdf,
+    required this.onExportExcel,
+    required this.exportLocked,
+    this.exportingFormat,
+  });
 
   final ChecklistSummary item;
   final VoidCallback onOpen;
+  final VoidCallback onExportPdf;
+  final VoidCallback onExportExcel;
+  final bool exportLocked;
+  final ChecklistExportFormat? exportingFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -284,58 +333,156 @@ class _Card extends StatelessWidget {
     return Material(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onOpen,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderSubtle),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      item.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.headlineH5(),
-                    ),
-                  ),
-                  AppTag(label: ui.label, tone: ui.tone),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                [item.controlObject?.name, item.template?.name]
-                    .whereType<String>()
-                    .where((value) => value.isNotEmpty)
-                    .join(' · '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.bodyH4(),
-              ),
-              const Spacer(),
-              Text(date, style: AppText.bodyH4()),
-              if (ui.actionLabel != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.brand,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    ui.actionLabel!,
-                    style: AppText.bodyH4(color: AppColors.surface),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.borderSubtle),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: onOpen,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.headlineH5(),
+                            ),
+                          ),
+                          AppTag(label: ui.label, tone: ui.tone),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        [item.controlObject?.name, item.template?.name]
+                            .whereType<String>()
+                            .where((value) => value.isNotEmpty)
+                            .join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.bodyH4(),
+                      ),
+                      const Spacer(),
+                      if (date.isNotEmpty) Text(date, style: AppText.bodyH4()),
+                      if (date.isNotEmpty) const SizedBox(height: 4),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(text: 'Оценка  ', style: AppText.bodyH4()),
+                            TextSpan(
+                              text: item.formattedControlResult,
+                              style: AppText.bodyH4(color: AppColors.text).copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Row(
+                children: [
+                  if (ui.actionLabel != null)
+                    Flexible(
+                      child: GestureDetector(
+                        onTap: onOpen,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.brand,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            ui.actionLabel!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.bodyH4(color: AppColors.surface),
+                          ),
+                        ),
+                      ),
+                    ),
+                  const Spacer(),
+                  _ExportButton(
+                    label: 'PDF',
+                    loading: exportingFormat == ChecklistExportFormat.pdf,
+                    onPressed: exportLocked ? null : onExportPdf,
+                  ),
+                  const SizedBox(width: 8),
+                  _ExportButton(
+                    label: 'Excel',
+                    loading: exportingFormat == ChecklistExportFormat.excel,
+                    onPressed: exportLocked ? null : onExportExcel,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExportButton extends StatelessWidget {
+  const _ExportButton({
+    required this.label,
+    required this.loading,
+    this.onPressed,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null && !loading;
+    return Tooltip(
+      message: 'Скачать $label',
+      child: Material(
+        color: AppColors.brandSoft,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: enabled ? onPressed : null,
+          borderRadius: BorderRadius.circular(16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 52, minHeight: 28),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Center(
+                child: loading
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.brand,
+                        ),
+                      )
+                    : Text(
+                        label,
+                        style: AppText.bodyH5(
+                          color: enabled ? AppColors.brand : AppColors.placeholder,
+                        ).copyWith(fontWeight: FontWeight.w500),
+                      ),
+              ),
+            ),
           ),
         ),
       ),

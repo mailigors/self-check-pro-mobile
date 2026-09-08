@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../../core/utils/json_helpers.dart';
 import '../../../core/widgets/app_tag.dart';
 
@@ -17,6 +19,44 @@ class NamedEntity {
 }
 
 enum ChecklistStatusCode { draft, inWork, completed, unknown }
+
+enum ChecklistExportFormat {
+  pdf,
+  excel;
+
+  String get pathSuffix => switch (this) {
+        pdf => 'pdf',
+        excel => 'excel',
+      };
+
+  String get fileExtension => switch (this) {
+        pdf => 'pdf',
+        excel => 'xlsx',
+      };
+
+  String get mimeType => switch (this) {
+        pdf => 'application/pdf',
+        excel =>
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      };
+
+  String get label => switch (this) {
+        pdf => 'PDF',
+        excel => 'Excel',
+      };
+}
+
+class ChecklistExportFile {
+  const ChecklistExportFile({
+    required this.bytes,
+    required this.filename,
+    required this.mimeType,
+  });
+
+  final Uint8List bytes;
+  final String filename;
+  final String mimeType;
+}
 
 class ChecklistStatusInfo {
   const ChecklistStatusInfo({
@@ -56,6 +96,7 @@ class ChecklistSummary {
     required this.status,
     this.startAt,
     this.endAt,
+    this.controlResult,
   });
 
   final int id;
@@ -66,9 +107,16 @@ class ChecklistSummary {
   final ChecklistStatusInfo status;
   final DateTime? startAt;
   final DateTime? endAt;
+  final double? controlResult;
 
   String get title =>
       schedule?.name.isNotEmpty == true ? schedule!.name : (template?.name ?? 'Чек-лист');
+
+  String get formattedControlResult {
+    final value = controlResult;
+    if (value == null) return '—';
+    return '${value.toStringAsFixed(1).replaceAll('.', ',')}%';
+  }
 
   factory ChecklistSummary.fromJson(Map<String, dynamic> json) {
     return ChecklistSummary(
@@ -83,7 +131,16 @@ class ChecklistSummary {
       status: ChecklistStatusInfo.fromJson(json['status']),
       startAt: DateTime.tryParse(asString(json['start_at']) ?? ''),
       endAt: DateTime.tryParse(asString(json['end_at']) ?? ''),
+      controlResult: _parseControlResult(pick(json, ['control_result', 'controlResult'])),
     );
+  }
+
+  static double? _parseControlResult(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is num) return raw.toDouble();
+    final text = '$raw'.trim().replaceAll('%', '').replaceAll(',', '.');
+    if (text.isEmpty) return null;
+    return double.tryParse(text);
   }
 }
 
@@ -333,6 +390,7 @@ class ItemAnswer {
   const ItemAnswer({
     this.id,
     this.value,
+    this.comment,
     this.photoIds = const [],
     this.videoIds = const [],
     this.otherIds = const [],
@@ -340,6 +398,7 @@ class ItemAnswer {
 
   final int? id;
   final dynamic value;
+  final String? comment;
   final List<AttachmentRef> photoIds;
   final List<AttachmentRef> videoIds;
   final List<AttachmentRef> otherIds;
@@ -354,10 +413,14 @@ class ItemAnswer {
     return !hasValue && photoIds.isEmpty && videoIds.isEmpty && otherIds.isEmpty;
   }
 
+  bool get hasComment => comment != null;
+
   ItemAnswer copyWith({
     int? id,
     dynamic value,
     bool clearValue = false,
+    String? comment,
+    bool clearComment = false,
     List<AttachmentRef>? photoIds,
     List<AttachmentRef>? videoIds,
     List<AttachmentRef>? otherIds,
@@ -365,6 +428,7 @@ class ItemAnswer {
     return ItemAnswer(
       id: id ?? this.id,
       value: clearValue ? null : (value ?? this.value),
+      comment: clearComment ? null : (comment ?? this.comment),
       photoIds: photoIds ?? this.photoIds,
       videoIds: videoIds ?? this.videoIds,
       otherIds: otherIds ?? this.otherIds,
@@ -377,6 +441,7 @@ class ItemAnswer {
     return ItemAnswer(
       id: asInt(json['id']),
       value: json['answer'],
+      comment: asString(pick(json, ['comment', 'comments'])),
       photoIds: parseFiles(json['photo_ids']),
       videoIds: parseFiles(json['video_ids']),
       otherIds: parseFiles(json['other_ids']),

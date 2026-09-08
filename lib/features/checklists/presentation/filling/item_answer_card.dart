@@ -58,6 +58,13 @@ class ItemAnswerCard extends ConsumerWidget {
             answer: answer,
             readOnly: readOnly,
           ),
+          if (!readOnly || answer.hasComment)
+            _CommentField(
+              checklistId: checklistId,
+              itemId: item.id,
+              comment: answer.comment,
+              readOnly: readOnly,
+            ),
           if (uploading) ...[
             const SizedBox(height: 8),
             const LinearProgressIndicator(minHeight: 3, color: AppColors.brand),
@@ -317,6 +324,85 @@ class _Control extends ConsumerWidget {
           onChanged: (value) => _ctrl(ref).setAnswer(item.id, value, clear: value.isEmpty),
         );
     }
+  }
+}
+
+class _CommentField extends ConsumerWidget {
+  const _CommentField({
+    required this.checklistId,
+    required this.itemId,
+    required this.comment,
+    required this.readOnly,
+  });
+
+  final int checklistId;
+  final int itemId;
+  final String? comment;
+  final bool readOnly;
+
+  bool get _enabled => comment != null;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: readOnly
+              ? null
+              : () {
+                  ref.read(fillingControllerProvider(checklistId).notifier).setComment(
+                        itemId,
+                        comment: _enabled ? null : '',
+                      );
+                },
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: _enabled ? AppColors.brand : AppColors.surface,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: _enabled ? AppColors.brand : AppColors.border),
+                  ),
+                  child: _enabled
+                      ? const Icon(Icons.check, size: 14, color: AppColors.surface)
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Комментарий',
+                  style: AppText.bodyH4(color: AppColors.text),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_enabled) ...[
+          const SizedBox(height: 8),
+          _SyncedTextField(
+            text: comment ?? '',
+            hint: 'Комментарий',
+            minLines: 3,
+            maxLines: 6,
+            enabled: !readOnly,
+            readOnly: readOnly,
+            keyboardType: TextInputType.multiline,
+            onChanged: (value) {
+              ref.read(fillingControllerProvider(checklistId).notifier).setComment(
+                    itemId,
+                    comment: value,
+                  );
+            },
+          ),
+        ],
+      ],
+    );
   }
 }
 

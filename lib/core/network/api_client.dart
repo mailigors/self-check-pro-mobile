@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,18 @@ import '../config/api_config.dart';
 import '../storage/token_storage.dart';
 import '../utils/json_helpers.dart';
 import 'api_exception.dart';
+
+class DownloadedFile {
+  const DownloadedFile({
+    required this.bytes,
+    required this.filename,
+    required this.mimeType,
+  });
+
+  final Uint8List bytes;
+  final String filename;
+  final String mimeType;
+}
 
 class ApiClient {
   ApiClient(this._storage) {
@@ -90,6 +103,51 @@ class ApiClient {
     T Function(dynamic data)? parser,
   }) {
     return _run(() => dio.get<dynamic>(path, queryParameters: query), parser);
+  }
+
+  Future<DownloadedFile> download(String path, {String? fallbackFilename}) async {
+    try {
+      final response = await dio.get<List<int>>(
+        path,
+        options: Options(
+          responseType: ResponseType.bytes,
+          receiveTimeout: const Duration(minutes: 2),
+        ),
+      );
+      final raw = response.data;
+      final bytes = raw is Uint8List
+          ? raw
+          : Uint8List.fromList(raw ?? const <int>[]);
+      if (bytes.isEmpty) {
+        throw const ApiException(message: 'Файл пуст');
+      }
+      final headerName = parseContentDispositionFilename(
+        response.headers.value('content-disposition'),
+      );
+      final mime = (response.headers.value(Headers.contentTypeHeader) ??
+              'application/octet-stream')
+          .split(';')
+          .first
+          .trim();
+      return DownloadedFile(
+        bytes: bytes,
+        filename: _filenameWithExtension(
+          sanitizeFilename(headerName ?? fallbackFilename ?? 'download'),
+          fallbackFilename,
+        ),
+        mimeType: mime,
+      );
+    } on DioException catch (error) {
+      throw _mapDio(error);
+    }
+  }
+
+  String _filenameWithExtension(String name, String? fallback) {
+    if (name.contains('.')) return name;
+    final fallbackExt = fallback != null && fallback.contains('.')
+        ? fallback.substring(fallback.lastIndexOf('.'))
+        : '';
+    return '$name$fallbackExt';
   }
 
   Future<T> post<T>(

@@ -38,4 +38,6 @@ abstract class ChecklistRepository {
     required int templateId,
     required int controlObjectId,
   });
+
+  Future<ChecklistExportFile> export(int id, ChecklistExportFormat format);
 }

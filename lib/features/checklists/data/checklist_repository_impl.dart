@@ -78,6 +78,8 @@ class ChecklistRepositoryImpl implements ChecklistRepository {
           if (answer.value != null && '${answer.value}'.isNotEmpty) {
             map['answer'] = answer.value;
           }
+          final comment = answer.comment?.trim();
+          map['comment'] = (comment != null && comment.isNotEmpty) ? comment : null;
           return map;
         }).toList(),
       },
@@ -159,6 +161,19 @@ class ChecklistRepositoryImpl implements ChecklistRepository {
         'control_object_id': controlObjectId,
       },
       parser: (data) => ChecklistSummary.fromJson(asMap(data)),
+    );
+  }
+
+  @override
+  Future<ChecklistExportFile> export(int id, ChecklistExportFormat format) async {
+    final file = await _api.download(
+      '/checklists/$id/export/${format.pathSuffix}',
+      fallbackFilename: 'checklist-$id.${format.fileExtension}',
+    );
+    return ChecklistExportFile(
+      bytes: file.bytes,
+      filename: file.filename,
+      mimeType: file.mimeType.isEmpty ? format.mimeType : file.mimeType,
     );
   }
 }
