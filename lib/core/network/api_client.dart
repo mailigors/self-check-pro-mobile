@@ -8,6 +8,7 @@ import '../config/api_config.dart';
 import '../storage/token_storage.dart';
 import '../utils/json_helpers.dart';
 import 'api_exception.dart';
+import 'api_transport.dart';
 
 class DownloadedFile {
   const DownloadedFile({
@@ -31,6 +32,7 @@ class ApiClient {
         headers: const {'Content-Type': 'application/json'},
       ),
     );
+    configureApiTransport(dio);
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
