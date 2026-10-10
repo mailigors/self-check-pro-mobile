@@ -5,7 +5,11 @@
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<string>ru</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ru</string>
+	</array>
 	<key>CFBundleDisplayName</key>
 	<string>Self-Check Pro</string>
 	<key>NSAppTransportSecurity</key>
@@ -16,7 +20,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Нужен доступ к камере, чтобы прикреплять фото к ответам чек-листа.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Нужен доступ к фото, чтобы прикреплять изображения к ответам.</string>
+	<string>Нужен доступ к галерее, чтобы прикреплять фото и видео к ответам.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Нужен доступ к микрофону для записи видео к ответам.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

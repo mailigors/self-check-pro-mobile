@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:mime/mime.dart';
 
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -11,6 +12,8 @@ import '../../../../core/widgets/app_icon.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../domain/checklist_models.dart';
 import 'filling_controller.dart';
+import 'attachment_preview.dart';
+import 'media_source_sheet.dart';
 
 class ItemAnswerCard extends ConsumerWidget {
   const ItemAnswerCard({
@@ -760,7 +763,11 @@ class _Attachments extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final files = [...answer.photoIds, ...answer.videoIds, ...answer.otherIds];
+    final files = [
+      for (final file in answer.photoIds) (file: file, kind: 'photo'),
+      for (final file in answer.videoIds) (file: file, kind: 'video'),
+      for (final file in answer.otherIds) (file: file, kind: 'other'),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -771,52 +778,41 @@ class _Attachments extends ConsumerWidget {
             children: [
               _AttachButton(
                 icon: AppIcon.camera,
-                onTap: () => _pick(context, ref, ImageSource.camera, 'photo'),
+                tooltip: 'Добавить фото',
+                onTap: () => _chooseMedia(context, ref, 'photo'),
               ),
               const SizedBox(width: 12),
               _AttachButton(
                 icon: AppIcon.video,
-                onTap: () => _pick(context, ref, ImageSource.camera, 'video'),
+                tooltip: 'Добавить видео',
+                onTap: () => _chooseMedia(context, ref, 'video'),
               ),
               const SizedBox(width: 12),
               _AttachButton(
                 icon: AppIcon.paperclip,
+                tooltip: 'Прикрепить файл',
                 onTap: () => _pickFile(context, ref),
               ),
             ],
           ),
         if (files.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
+          Column(
             children: [
-              for (final file in files)
-                Container(
-                  padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.brandSoft,
-                    borderRadius: BorderRadius.circular(30),
+              for (final entry in files)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: AttachmentFileButton(
+                  key: ValueKey(entry.file.attachmentId),
+                  attachmentKey: (
+                    checklistId: checklistId,
+                    answerId: answer.id,
+                    file: entry.file,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const AppIcon(AppIcon.file, size: 16),
-                      const SizedBox(width: 6),
-                      Text(
-                        file.filename ?? 'файл ${file.attachmentId}',
-                        style: AppText.bodyH5(color: AppColors.text),
-                      ),
-                      if (!readOnly) ...[
-                        const SizedBox(width: 6),
-                        GestureDetector(
-                          onTap: () => ref
-                              .read(fillingControllerProvider(checklistId).notifier)
-                              .removeAttachment(item.id, file.attachmentId),
-                          child: const AppIcon(AppIcon.close, size: 16, color: AppColors.error),
-                        ),
-                      ],
-                    ],
+                  kind: entry.kind,
+                  onRemove: readOnly ? null : () => ref
+                      .read(fillingControllerProvider(checklistId).notifier)
+                      .removeAttachment(item.id, entry.file.attachmentId),
                   ),
                 ),
             ],
@@ -824,6 +820,12 @@ class _Attachments extends ConsumerWidget {
         ],
       ],
     );
+  }
+
+  Future<void> _chooseMedia(BuildContext context, WidgetRef ref, String kind) async {
+    final source = await showMediaSourceSheet(context: context, video: kind == 'video');
+    if (source == null || !context.mounted) return;
+    await _pick(context, ref, source, kind);
   }
 
   Future<void> _pick(
@@ -842,7 +844,8 @@ class _Attachments extends ConsumerWidget {
               item: item,
               filename: file.name,
               bytes: bytes,
-              contentType: 'video/mp4',
+              contentType: lookupMimeType(file.name, headerBytes: bytes.take(32).toList())
+                  ?? 'video/mp4',
               kind: 'video',
             );
       } else {
@@ -853,7 +856,8 @@ class _Attachments extends ConsumerWidget {
               item: item,
               filename: file.name,
               bytes: bytes,
-              contentType: 'image/jpeg',
+              contentType: lookupMimeType(file.name, headerBytes: bytes.take(32).toList())
+                  ?? 'image/jpeg',
               kind: 'photo',
             );
       }
@@ -874,7 +878,8 @@ class _Attachments extends ConsumerWidget {
             item: item,
             filename: file!.name,
             bytes: file.bytes!,
-            contentType: 'application/octet-stream',
+            contentType: lookupMimeType(file.name, headerBytes: file.bytes!.take(32).toList())
+                ?? 'application/octet-stream',
             kind: 'other',
           );
     } catch (error) {
@@ -887,23 +892,27 @@ class _Attachments extends ConsumerWidget {
 }
 
 class _AttachButton extends StatelessWidget {
-  const _AttachButton({required this.icon, required this.onTap});
+  const _AttachButton({required this.icon, required this.tooltip, required this.onTap});
 
   final String icon;
+  final String tooltip;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.background,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(16),
-        child: SizedBox(
-          width: 56,
-          height: 56,
-          child: Center(child: AppIcon(icon, size: 24)),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: Center(child: AppIcon(icon, size: 24)),
+          ),
         ),
       ),
     );

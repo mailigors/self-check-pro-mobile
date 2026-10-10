@@ -21,14 +21,20 @@ class AppTag extends StatelessWidget {
       AppTagTone.draft => AppColors.draft,
     };
     return Container(
-      height: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      constraints: const BoxConstraints(minHeight: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color,
+        color: tone == AppTagTone.warning ? const Color(0xFFFFD54F) : color,
         borderRadius: BorderRadius.circular(16),
       ),
-      alignment: Alignment.center,
-      child: Text(label, style: AppText.bodyH5(color: AppColors.surface)),
+      child: Text(
+        label,
+        style: AppText.bodyH5(
+          color: tone == AppTagTone.warning
+              ? AppColors.text
+              : AppColors.surface,
+        ),
+      ),
     );
   }
 }

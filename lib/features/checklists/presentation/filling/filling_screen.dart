@@ -205,22 +205,75 @@ class _Body extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(40),
       ),
-      child: ListView(
-        padding: const EdgeInsets.all(24),
+      child: Column(
         children: [
-          _Meta(state: state),
-          const SizedBox(height: 16),
-          for (final section in state.template.sections) ...[
-            _SectionBlock(
-              checklistId: checklistId,
-              state: state,
-              section: section,
-              keyFor: keyFor,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+            child: _Progress(state: state),
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              children: [
+                _Meta(state: state),
+                const SizedBox(height: 16),
+                for (final section in state.template.sections) ...[
+                  _SectionBlock(
+                    checklistId: checklistId,
+                    state: state,
+                    section: section,
+                    keyFor: keyFor,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ],
             ),
-            const SizedBox(height: 16),
-          ],
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _Progress extends StatelessWidget {
+  const _Progress({required this.state});
+
+  final FillingState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = state.activeItems.length;
+    final answered = state.answeredCount;
+    final progress = total == 0 ? 0.0 : answered / total;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Прогресс заполнения',
+                style: AppText.bodyH4(color: AppColors.text).copyWith(fontWeight: FontWeight.w500),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '$answered из $total',
+              style: AppText.bodyH4(color: AppColors.brand).copyWith(fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 6,
+            backgroundColor: AppColors.borderSubtle,
+            color: AppColors.brand,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -237,9 +290,6 @@ class _Meta extends StatelessWidget {
       state.summary.controlObject?.name,
       state.summary.schedule?.name ?? state.summary.template?.name,
     ].whereType<String>().where((value) => value.isNotEmpty).join('  ·  ');
-    final total = state.activeItems.length;
-    final answered = state.answeredCount;
-    final progress = total == 0 ? 0.0 : answered / total;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,30 +304,6 @@ class _Meta extends StatelessWidget {
             ),
             AppTag(label: ui.label, tone: ui.tone),
           ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Text(
-              'Прогресс заполнения',
-              style: AppText.bodyH4(color: AppColors.text).copyWith(fontWeight: FontWeight.w500),
-            ),
-            const Spacer(),
-            Text(
-              '$answered из $total',
-              style: AppText.bodyH4(color: AppColors.brand).copyWith(fontWeight: FontWeight.w500),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 6,
-            backgroundColor: AppColors.borderSubtle,
-            color: AppColors.brand,
-          ),
         ),
         if (state.dirty) ...[
           const SizedBox(height: 8),

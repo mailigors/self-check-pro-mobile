@@ -160,20 +160,20 @@ class UiChecklistStatus {
       case ChecklistStatusCode.inWork:
         return const UiChecklistStatus(
           label: 'В работе',
-          tone: AppTagTone.success,
+          tone: AppTagTone.warning,
           actionLabel: 'Продолжить',
         );
       case ChecklistStatusCode.completed:
         return const UiChecklistStatus(
           label: 'Завершен',
-          tone: AppTagTone.draft,
+          tone: AppTagTone.success,
           actionLabel: 'Возобновить',
         );
       case ChecklistStatusCode.draft:
         final waiting = item.startAt != null && item.startAt!.isAfter(now);
         return UiChecklistStatus(
           label: waiting ? 'Ожидание' : 'В работу',
-          tone: waiting ? AppTagTone.warning : AppTagTone.brand,
+          tone: waiting ? AppTagTone.error : AppTagTone.draft,
           actionLabel: waiting ? null : 'Взять в работу',
         );
       case ChecklistStatusCode.unknown:

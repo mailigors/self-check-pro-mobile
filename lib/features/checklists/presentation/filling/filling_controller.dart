@@ -1,7 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/api_config.dart';
 import '../../../../core/network/api_exception.dart';
+import '../../../../core/network/api_client.dart';
+import 'attachment_preview.dart';
 import '../../data/checklist_repository_impl.dart';
 import '../../domain/checklist_models.dart';
 
@@ -66,6 +70,7 @@ class FillingState {
 class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int> {
   @override
   Future<FillingState> build(int arg) async {
+    ref.watch(attachmentCacheProvider(arg));
     final repo = ref.read(checklistRepositoryProvider);
     final detail = await repo.getById(arg);
     final templateId = detail.summary.template?.id;
@@ -149,6 +154,11 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
             bytes: bytes,
             contentType: contentType,
           );
+      ref.read(attachmentCacheProvider(current.summary.id))[uploaded.attachmentId] = DownloadedFile(
+        bytes: Uint8List.fromList(bytes),
+        filename: uploaded.filename ?? filename,
+        mimeType: uploaded.contentType ?? contentType,
+      );
       final latest = _require;
       final prev = latest.answers[item.id] ?? const ItemAnswer();
       final next = switch (kind) {

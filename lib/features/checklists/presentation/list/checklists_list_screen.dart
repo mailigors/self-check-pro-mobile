@@ -161,14 +161,14 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
           child: Column(
             children: [
               AppHeader(
-                title: 'Чек-листы',
+                title: 'self-check-pro',
                 onProfile: () => context.go('/profile'),
               ),
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: AppButton(
-                  label: 'Контроль',
+                  label: 'Контрольный лист',
                   onPressed: _startControl,
                 ),
               ),
@@ -282,7 +282,7 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
-          mainAxisExtent: 220,
+          mainAxisExtent: 260,
           crossAxisSpacing: 16,
           mainAxisSpacing: 14,
         ),
@@ -350,18 +350,16 @@ class _Card extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppText.headlineH5(),
-                            ),
-                          ),
-                          AppTag(label: ui.label, tone: ui.tone),
-                        ],
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: AppTag(label: ui.label, tone: ui.tone),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        item.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.headlineH5(),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -396,40 +394,48 @@ class _Card extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Row(
-                children: [
-                  if (ui.actionLabel != null)
-                    Flexible(
-                      child: GestureDetector(
-                        onTap: onOpen,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.brand,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            ui.actionLabel!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppText.bodyH4(color: AppColors.surface),
+              child: SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  alignment: ui.actionLabel == null ? WrapAlignment.end : WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: [
+                    if (ui.actionLabel != null)
+                      Material(
+                        color: AppColors.brand,
+                        borderRadius: BorderRadius.circular(16),
+                        child: InkWell(
+                          onTap: onOpen,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            child: Text(
+                              ui.actionLabel!,
+                              style: AppText.bodyH4(color: AppColors.surface),
+                            ),
                           ),
                         ),
                       ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _ExportButton(
+                          label: 'PDF',
+                          loading: exportingFormat == ChecklistExportFormat.pdf,
+                          onPressed: exportLocked ? null : onExportPdf,
+                        ),
+                        const SizedBox(width: 8),
+                        _ExportButton(
+                          label: 'Excel',
+                          loading: exportingFormat == ChecklistExportFormat.excel,
+                          onPressed: exportLocked ? null : onExportExcel,
+                        ),
+                      ],
                     ),
-                  const Spacer(),
-                  _ExportButton(
-                    label: 'PDF',
-                    loading: exportingFormat == ChecklistExportFormat.pdf,
-                    onPressed: exportLocked ? null : onExportPdf,
-                  ),
-                  const SizedBox(width: 8),
-                  _ExportButton(
-                    label: 'Excel',
-                    loading: exportingFormat == ChecklistExportFormat.excel,
-                    onPressed: exportLocked ? null : onExportExcel,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
