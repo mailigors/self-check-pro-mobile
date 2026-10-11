@@ -37,11 +37,13 @@ class ItemAnswerCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: error == null ? AppColors.borderSubtle : AppColors.error),
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: error == null ? AppColors.borderSubtle : AppColors.error,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,10 +51,7 @@ class ItemAnswerCard extends ConsumerWidget {
           _Label(item: item),
           if (item.description != null && item.description!.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(
-              item.description!,
-              style: AppText.bodyH4(),
-            ),
+            Text(item.description!, style: AppText.bodyH4()),
           ],
           const SizedBox(height: 8),
           _Control(
@@ -74,25 +73,20 @@ class ItemAnswerCard extends ConsumerWidget {
           ],
           if (item.photoRequired || item.videoRequired) ...[
             const SizedBox(height: 8),
-            Row(
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
               children: [
-                if (item.photoRequired) ...[
-                  const AppIcon(AppIcon.camera, size: 16, color: AppColors.textSecondary),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Требуется фото',
-                    style: AppText.bodyH5(),
+                if (item.photoRequired)
+                  _Requirement(
+                    icon: Icons.camera_alt_outlined,
+                    label: 'Требуется фото',
                   ),
-                ],
-                if (item.videoRequired) ...[
-                  const SizedBox(width: 12),
-                  const AppIcon(AppIcon.video, size: 16, color: AppColors.textSecondary),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Требуется видео',
-                    style: AppText.bodyH5(),
+                if (item.videoRequired)
+                  _Requirement(
+                    icon: Icons.videocam_outlined,
+                    label: 'Требуется видео',
                   ),
-                ],
               ],
             ),
           ],
@@ -106,7 +100,11 @@ class ItemAnswerCard extends ConsumerWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                const AppIcon(AppIcon.warning, size: 16, color: AppColors.error),
+                const AppIcon(
+                  AppIcon.warning,
+                  size: 16,
+                  color: AppColors.error,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -123,6 +121,22 @@ class ItemAnswerCard extends ConsumerWidget {
   }
 }
 
+class _Requirement extends StatelessWidget {
+  const _Requirement({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 16, color: AppColors.brand),
+      const SizedBox(width: 6),
+      Text(label, style: AppText.bodyH5(color: AppColors.text)),
+      Text(' *', style: AppText.bodyH5(color: AppColors.brand)),
+    ],
+  );
+}
+
 class _Label extends StatelessWidget {
   const _Label({required this.item});
 
@@ -130,20 +144,19 @@ class _Label extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Flexible(
-          child: Text(
-            item.name,
-            style: AppText.headlineH5(),
-          ),
-        ),
-        if (item.required)
-          Text(
-            ' *',
-            style: AppText.headlineH5(color: AppColors.error),
-          ),
-      ],
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: item.name),
+          if (item.required)
+            const TextSpan(
+              text: ' *',
+              style: TextStyle(color: AppColors.brand),
+            ),
+        ],
+      ),
+      style: AppText.bodyH4(color: AppColors.text)
+          .copyWith(fontWeight: FontWeight.w700),
     );
   }
 }
@@ -171,17 +184,22 @@ class _Control extends ConsumerWidget {
         return _Boolean(
           value: answer.value is bool ? answer.value as bool : null,
           readOnly: readOnly,
-          onChanged: (value) => _ctrl(ref).setAnswer(item.id, value, clear: value == null),
+          onChanged: (value) =>
+              _ctrl(ref).setAnswer(item.id, value, clear: value == null),
         );
       case 'long_text':
         return _SyncedTextField(
           text: '${answer.value ?? ''}',
           hint: item.settings.placeholder ?? 'Подробное описание...',
+          showLength: true,
+          minLength: item.settings.minLength,
+          maxLength: item.settings.maxLength,
           minLines: 3,
           maxLines: 6,
           enabled: !readOnly,
           readOnly: readOnly,
-          onChanged: (value) => _ctrl(ref).setAnswer(item.id, value, clear: value.isEmpty),
+          onChanged: (value) =>
+              _ctrl(ref).setAnswer(item.id, value, clear: value.isEmpty),
         );
       case 'number':
       case 'numeric':
@@ -192,27 +210,33 @@ class _Control extends ConsumerWidget {
             _SyncedTextField(
               text: answer.value?.toString() ?? '',
               hint: item.settings.placeholder ?? 'Введите число',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              unit: item.settings.unit,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               enabled: !readOnly,
               readOnly: readOnly,
               onChanged: (value) {
                 final normalized = value.replaceAll(',', '.');
                 final number = num.tryParse(normalized);
-                _ctrl(ref).setAnswer(item.id, number ?? value, clear: value.isEmpty);
+                _ctrl(ref)
+                    .setAnswer(item.id, number ?? value, clear: value.isEmpty);
               },
             ),
-            if (item.settings.unit != null || item.settings.minValue != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  [
-                    if (item.settings.unit != null) 'Ед. изм.: ${item.settings.unit}',
-                    if (item.settings.minValue != null) 'мин ${item.settings.minValue}',
-                    if (item.settings.maxValue != null) 'макс ${item.settings.maxValue}',
-                  ].join('   ·   '),
-                  style: AppText.bodyH5(),
-                ),
+            _BoundsHint(
+              min: _numberLabel(
+                item.settings.minValue,
+                precision: item.questionType == 'double'
+                    ? item.settings.precision ?? 2
+                    : null,
               ),
+              max: _numberLabel(
+                item.settings.maxValue,
+                precision: item.questionType == 'double'
+                    ? item.settings.precision ?? 2
+                    : null,
+              ),
+            ),
           ],
         );
       case 'slider':
@@ -230,28 +254,44 @@ class _Control extends ConsumerWidget {
           enabled: !readOnly,
           onChanged: (value) => _ctrl(ref).setAnswer(item.id, value.round()),
         );
+      case 'select':
+      case 'singlechoice':
       case 'single_choice':
-        if (item.settings.uiHint == 'dropdown') {
-          final selected = item.settings.options.contains(answer.value?.toString())
+        if (item.questionType == 'select' ||
+            item.settings.uiHint?.toLowerCase() == 'dropdown') {
+          final selected =
+              item.settings.options.contains(answer.value?.toString())
               ? answer.value?.toString()
               : null;
           return DropdownButtonFormField<String>(
+            isExpanded: true,
+            hint: Text('Выберите вариант', style: AppText.bodyH4()),
             key: ValueKey(selected),
             initialValue: selected,
             items: item.settings.options
-                .map((option) => DropdownMenuItem(value: option, child: Text(option)))
+                .map(
+                  (option) => DropdownMenuItem(
+                    value: option,
+                    child: Text(
+                      item.settings.optionLabels[option] ?? option,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
                 .toList(),
-            onChanged: readOnly ? null : (value) => _ctrl(ref).setAnswer(item.id, value),
+            onChanged: readOnly
+                ? null
+                : (value) => _ctrl(ref).setAnswer(item.id, value),
             decoration: InputDecoration(
               filled: true,
               fillColor: AppColors.surface,
               hintStyle: AppText.bodyH3(color: AppColors.placeholder),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(28),
                 borderSide: const BorderSide(color: AppColors.border, width: 1),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(28),
                 borderSide: const BorderSide(color: AppColors.brand, width: 1),
               ),
             ),
@@ -263,20 +303,21 @@ class _Control extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: _ChoiceRow(
-                  label: option,
+                  label: item.settings.optionLabels[option] ?? option,
                   selected: answer.value?.toString() == option,
                   kind: _ChoiceKind.radio,
                   onTap: readOnly
                       ? null
                       : () => _ctrl(ref).setAnswer(
-                            item.id,
-                            option,
-                            clear: answer.value?.toString() == option,
-                          ),
+                          item.id,
+                          option,
+                          clear: answer.value?.toString() == option,
+                        ),
                 ),
               ),
           ],
         );
+      case 'multichoice':
       case 'multi_choice':
         final selected = answer.value is List
             ? (answer.value as List).map((e) => '$e').toSet()
@@ -287,7 +328,7 @@ class _Control extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: _ChoiceRow(
-                  label: option,
+                  label: item.settings.optionLabels[option] ?? option,
                   selected: selected.contains(option),
                   kind: _ChoiceKind.check,
                   onTap: readOnly
@@ -295,7 +336,11 @@ class _Control extends ConsumerWidget {
                       : () {
                           final next = {...selected};
                           if (!next.add(option)) next.remove(option);
-                          _ctrl(ref).setAnswer(item.id, next.toList(), clear: next.isEmpty);
+                          _ctrl(ref).setAnswer(
+                            item.id,
+                            next.toList(),
+                            clear: next.isEmpty,
+                          );
                         },
                 ),
               ),
@@ -316,15 +361,20 @@ class _Control extends ConsumerWidget {
           hint: item.settings.placeholder ?? 'Комментарий к файлу',
           enabled: !readOnly,
           readOnly: readOnly,
-          onChanged: (value) => _ctrl(ref).setAnswer(item.id, value, clear: value.isEmpty),
+          onChanged: (value) =>
+              _ctrl(ref).setAnswer(item.id, value, clear: value.isEmpty),
         );
       default:
         return _SyncedTextField(
           text: '${answer.value ?? ''}',
           hint: item.settings.placeholder ?? 'Введите ответ',
+          showLength: true,
+          minLength: item.settings.minLength,
+          maxLength: item.settings.maxLength,
           enabled: !readOnly,
           readOnly: readOnly,
-          onChanged: (value) => _ctrl(ref).setAnswer(item.id, value, clear: value.isEmpty),
+          onChanged: (value) =>
+              _ctrl(ref).setAnswer(item.id, value, clear: value.isEmpty),
         );
     }
   }
@@ -355,32 +405,26 @@ class _CommentField extends ConsumerWidget {
           onTap: readOnly
               ? null
               : () {
-                  ref.read(fillingControllerProvider(checklistId).notifier).setComment(
-                        itemId,
-                        comment: _enabled ? null : '',
-                      );
+                  ref
+                      .read(fillingControllerProvider(checklistId).notifier)
+                      .setComment(itemId, comment: _enabled ? null : '');
                 },
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
               children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: _enabled ? AppColors.brand : AppColors.surface,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: _enabled ? AppColors.brand : AppColors.border),
-                  ),
-                  child: _enabled
-                      ? const Icon(Icons.check, size: 14, color: AppColors.surface)
-                      : null,
+                const Icon(
+                  Icons.add_comment_outlined,
+                  size: 18,
+                  color: AppColors.brand,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'Комментарий',
-                  style: AppText.bodyH4(color: AppColors.text),
+                Expanded(
+                  child: Text(
+                    _enabled ? 'Комментарий' : 'Добавить комментарий',
+                    style: AppText.bodyH5(color: AppColors.brand),
+                  ),
                 ),
               ],
             ),
@@ -397,10 +441,9 @@ class _CommentField extends ConsumerWidget {
             readOnly: readOnly,
             keyboardType: TextInputType.multiline,
             onChanged: (value) {
-              ref.read(fillingControllerProvider(checklistId).notifier).setComment(
-                    itemId,
-                    comment: value,
-                  );
+              ref
+                  .read(fillingControllerProvider(checklistId).notifier)
+                  .setComment(itemId, comment: value);
             },
           ),
         ],
@@ -410,65 +453,47 @@ class _CommentField extends ConsumerWidget {
 }
 
 class _Boolean extends StatelessWidget {
-  const _Boolean({required this.value, required this.onChanged, required this.readOnly});
-
+  const _Boolean({
+    required this.value,
+    required this.onChanged,
+    required this.readOnly,
+  });
   final bool? value;
   final ValueChanged<bool?> onChanged;
   final bool readOnly;
-
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _boolChip('Да', true),
-        const SizedBox(width: 12),
-        _boolChip('Нет', false),
-      ],
-    );
-  }
-
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(child: _boolChip('Да', true)),
+      const SizedBox(width: 10),
+      Expanded(child: _boolChip('Нет', false)),
+    ],
+  );
   Widget _boolChip(String label, bool option) {
     final selected = value == option;
-    return InkWell(
-      onTap: readOnly ? null : () => onChanged(selected ? null : option),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.brandSoft : AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? AppColors.brand : AppColors.border),
+    final color = option ? AppColors.success : AppColors.brand;
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Material(
+        color: selected ? color : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+          side: BorderSide(color: selected ? color : AppColors.border),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.surface,
-                border: Border.all(color: selected ? AppColors.brand : AppColors.border),
-              ),
-              child: selected
-                  ? Center(
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: const BoxDecoration(
-                          color: AppColors.brand,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 8),
-            Text(
+        child: InkWell(
+          onTap: readOnly ? null : () => onChanged(selected ? null : option),
+          borderRadius: BorderRadius.circular(28),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Text(
               label,
-              style: AppText.bodyH4(color: selected ? AppColors.brand : AppColors.text),
+              textAlign: TextAlign.center,
+              style: AppText.bodyH4(
+                color: selected ? AppColors.surface : AppColors.text,
+              ).copyWith(fontWeight: FontWeight.w700),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -484,73 +509,53 @@ class _ChoiceRow extends StatelessWidget {
     required this.kind,
     required this.onTap,
   });
-
   final String label;
   final bool selected;
   final _ChoiceKind kind;
   final VoidCallback? onTap;
-
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            if (kind == _ChoiceKind.radio)
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.surface,
-                  border: Border.all(color: selected ? AppColors.brand : AppColors.border),
-                ),
-                child: selected
-                    ? Center(
-                        child: Container(
-                          width: 12,
-                          height: 12,
-                          decoration: const BoxDecoration(
-                            color: AppColors.brand,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      )
-                    : null,
-              )
-            else
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: selected ? AppColors.brand : AppColors.surface,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: selected ? AppColors.brand : AppColors.border),
-                ),
-                child: selected
-                    ? const Icon(Icons.check, size: 14, color: AppColors.surface)
-                    : null,
+  Widget build(BuildContext context) => Semantics(
+    selected: selected,
+    button: true,
+    child: Material(
+      color: selected ? AppColors.brand : AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: selected ? AppColors.brand : AppColors.border),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(
+                kind == _ChoiceKind.radio
+                    ? (selected
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked)
+                    : (selected
+                          ? Icons.check_box_outlined
+                          : Icons.check_box_outline_blank),
+                size: 22,
+                color: selected ? AppColors.surface : AppColors.border,
               ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: AppText.bodyH4(color: AppColors.text),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppText.bodyH4(
+                    color: selected ? AppColors.surface : AppColors.text,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _SliderField extends StatelessWidget {
@@ -563,7 +568,6 @@ class _SliderField extends StatelessWidget {
     this.start,
     this.end,
   });
-
   final double min;
   final double max;
   final double value;
@@ -571,45 +575,77 @@ class _SliderField extends StatelessWidget {
   final bool enabled;
   final String? start;
   final String? end;
-
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(start ?? '${min.round()}', style: AppText.bodyH5()),
-        Expanded(
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppColors.brand,
-              inactiveTrackColor: AppColors.borderSubtle,
-              thumbColor: AppColors.brand,
-              overlayColor: AppColors.brandSoft,
-              trackHeight: 4,
-            ),
-            child: Slider(
-              min: min,
-              max: max,
-              value: value,
-              onChanged: enabled ? onChanged : null,
+  Widget build(BuildContext context) => Column(
+    children: [
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              start ?? '${min.round()}',
+              style: AppText.bodyH5(color: AppColors.text),
             ),
           ),
-        ),
-        Text(end ?? '${max.round()}', style: AppText.bodyH5()),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          decoration: BoxDecoration(
-            color: AppColors.brandSoft,
-            borderRadius: BorderRadius.circular(30),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.text,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Text(
+              '${value.round()}',
+              style: AppText.bodyH5(color: AppColors.surface),
+            ),
           ),
-          child: Text(
-            '${value.round()}',
-            style: AppText.bodyH4(color: AppColors.brand).copyWith(fontWeight: FontWeight.w500),
+          Expanded(
+            child: Text(
+              end ?? '${max.round()}',
+              textAlign: TextAlign.end,
+              style: AppText.bodyH5(color: AppColors.text),
+            ),
           ),
+        ],
+      ),
+      SliderTheme(
+        data: SliderTheme.of(context).copyWith(
+          trackHeight: 5,
+          activeTrackColor: AppColors.brand,
+          inactiveTrackColor: AppColors.border,
+          thumbColor: AppColors.brand,
+          overlayColor: AppColors.brandSoft,
         ),
-      ],
-    );
+        child: Slider(
+          min: min,
+          max: max,
+          value: value,
+          label: '${value.round()}',
+          onChanged: enabled && max > min ? onChanged : null,
+        ),
+      ),
+    ],
+  );
+}
+
+String _numberLabel(num? value, {int? precision}) {
+  if (value == null) return '-';
+  final format = NumberFormat('0.################', 'ru');
+  if (precision != null) {
+    final digits = precision.clamp(0, 20);
+    format.minimumFractionDigits = digits;
+    format.maximumFractionDigits = digits;
   }
+  return format.format(value);
+}
+
+class _BoundsHint extends StatelessWidget {
+  const _BoundsHint({required this.min, required this.max});
+  final String min;
+  final String max;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 8),
+    child: Text('мин $min · макс $max', style: AppText.bodyH5()),
+  );
 }
 
 class _SyncedTextField extends StatefulWidget {
@@ -617,6 +653,10 @@ class _SyncedTextField extends StatefulWidget {
     required this.text,
     required this.onChanged,
     this.hint,
+    this.unit,
+    this.showLength = false,
+    this.minLength,
+    this.maxLength,
     this.enabled = true,
     this.readOnly = false,
     this.keyboardType,
@@ -627,6 +667,10 @@ class _SyncedTextField extends StatefulWidget {
   final String text;
   final ValueChanged<String> onChanged;
   final String? hint;
+  final String? unit;
+  final bool showLength;
+  final int? minLength;
+  final int? maxLength;
   final bool enabled;
   final bool readOnly;
   final TextInputType? keyboardType;
@@ -665,15 +709,56 @@ class _SyncedTextFieldState extends State<_SyncedTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return AppTextField(
-      hint: widget.hint,
-      controller: _controller,
-      enabled: widget.enabled,
-      readOnly: widget.readOnly,
-      keyboardType: widget.keyboardType,
-      minLines: widget.minLines,
-      maxLines: widget.maxLines,
-      onChanged: widget.onChanged,
+    final count = _controller.text.characters.length;
+    final invalid =
+        (widget.maxLength != null && count > widget.maxLength!) ||
+        (count > 0 && widget.minLength != null && count < widget.minLength!);
+    final target = widget.maxLength ?? widget.minLength;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppTextField(
+          hint: widget.hint,
+          suffix: widget.unit == null
+              ? null
+              : Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    widget.unit!,
+                    style: AppText.bodyH5(color: AppColors.text),
+                  ),
+                ),
+          controller: _controller,
+          enabled: widget.enabled,
+          readOnly: widget.readOnly,
+          keyboardType: widget.keyboardType,
+          minLines: widget.minLines,
+          maxLines: widget.maxLines,
+          onChanged: (value) {
+            setState(() {});
+            widget.onChanged(value);
+          },
+        ),
+        if (widget.showLength) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Символов: $count · мин ${widget.minLength ?? '-'} · макс ${widget.maxLength ?? '-'}',
+            style: AppText.bodyH5(
+              color: invalid ? AppColors.error : AppColors.textSecondary,
+            ),
+          ),
+          if (target != null && target > 0) ...[
+            const SizedBox(height: 6),
+            LinearProgressIndicator(
+              value: (count / target).clamp(0, 1),
+              minHeight: 3,
+              borderRadius: BorderRadius.circular(3),
+              backgroundColor: AppColors.border,
+              color: invalid ? AppColors.error : AppColors.success,
+            ),
+          ],
+        ],
+      ],
     );
   }
 }
@@ -698,52 +783,89 @@ class _DateField extends StatelessWidget {
     final parsed = DateTime.tryParse(value ?? '');
     final label = parsed == null
         ? (withTime ? 'Выберите дату и время' : 'Выберите дату')
-        : DateFormat(withTime ? 'dd.MM.yyyy  HH:mm' : 'd MMMM yyyy', 'ru').format(parsed.toLocal());
-    final min = DateTime.tryParse(item.settings.minDate ?? item.settings.minDatetime ?? '') ??
+        : DateFormat(
+            withTime ? 'dd.MM.yyyy  HH:mm' : 'd MMMM yyyy',
+            'ru',
+          ).format(parsed.toLocal());
+    final min =
+        DateTime.tryParse(
+          item.settings.minDate ?? item.settings.minDatetime ?? '',
+        ) ??
         DateTime(2020);
-    final max = DateTime.tryParse(item.settings.maxDate ?? item.settings.maxDatetime ?? '') ??
+    final max =
+        DateTime.tryParse(
+          item.settings.maxDate ?? item.settings.maxDatetime ?? '',
+        ) ??
         DateTime(2100);
-    return AppTextField(
-      readOnly: true,
-      enabled: !readOnly,
-      hint: label,
-      controller: TextEditingController(text: parsed == null ? '' : label),
-      suffix: const Padding(
-        padding: EdgeInsets.all(12),
-        child: AppIcon(AppIcon.calendar, size: 24),
-      ),
-      onTap: readOnly
-          ? null
-          : () async {
-              final seed = parsed ?? DateTime.now();
-              final initial = seed.isBefore(min)
-                  ? min
-                  : seed.isAfter(max)
+    String boundLabel(String? raw) {
+      final date = DateTime.tryParse(raw ?? '');
+      if (date == null) return '-';
+      return DateFormat(withTime ? 'dd.MM.yyyy HH:mm' : 'dd.MM.yyyy')
+          .format(withTime ? date.toLocal() : date);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppTextField(
+          readOnly: true,
+          enabled: !readOnly,
+          hint: label,
+          controller: TextEditingController(text: parsed == null ? '' : label),
+          suffix: const Padding(
+            padding: EdgeInsets.all(12),
+            child: AppIcon(AppIcon.calendar, size: 24),
+          ),
+          onTap: readOnly
+              ? null
+              : () async {
+                  final seed = parsed ?? DateTime.now();
+                  final initial = seed.isBefore(min)
+                      ? min
+                      : seed.isAfter(max)
                       ? max
                       : seed;
-              final date = await showDatePicker(
-                context: context,
-                initialDate: initial,
-                firstDate: min,
-                lastDate: max,
-              );
-              if (date == null) return;
-              var result = date;
-              if (withTime && context.mounted) {
-                final time = await showTimePicker(
-                  context: context,
-                  initialTime: TimeOfDay.fromDateTime(parsed ?? DateTime.now()),
-                );
-                if (time != null) {
-                  result = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-                }
-              }
-              onChanged(
-                withTime
-                    ? result.toUtc().toIso8601String()
-                    : DateFormat('yyyy-MM-dd').format(result),
-              );
-            },
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: initial,
+                    firstDate: min,
+                    lastDate: max,
+                  );
+                  if (date == null) return;
+                  var result = date;
+                  if (withTime && context.mounted) {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(
+                        parsed ?? DateTime.now(),
+                      ),
+                    );
+                    if (time != null) {
+                      result = DateTime(
+                        date.year,
+                        date.month,
+                        date.day,
+                        time.hour,
+                        time.minute,
+                      );
+                    }
+                  }
+                  onChanged(
+                    withTime
+                        ? result.toUtc().toIso8601String()
+                        : DateFormat('yyyy-MM-dd').format(result),
+                  );
+                },
+        ),
+        _BoundsHint(
+          min: boundLabel(
+            withTime ? item.settings.minDatetime : item.settings.minDate,
+          ),
+          max: boundLabel(
+            withTime ? item.settings.maxDatetime : item.settings.maxDate,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -776,22 +898,28 @@ class _Attachments extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              _AttachButton(
-                icon: AppIcon.camera,
-                tooltip: 'Добавить фото',
-                onTap: () => _chooseMedia(context, ref, 'photo'),
+              Expanded(
+                child: _AttachButton(
+                  icon: AppIcon.camera,
+                  tooltip: 'Добавить фото',
+                  onTap: () => _chooseMedia(context, ref, 'photo'),
+                ),
               ),
               const SizedBox(width: 12),
-              _AttachButton(
-                icon: AppIcon.video,
-                tooltip: 'Добавить видео',
-                onTap: () => _chooseMedia(context, ref, 'video'),
+              Expanded(
+                child: _AttachButton(
+                  icon: AppIcon.video,
+                  tooltip: 'Добавить видео',
+                  onTap: () => _chooseMedia(context, ref, 'video'),
+                ),
               ),
               const SizedBox(width: 12),
-              _AttachButton(
-                icon: AppIcon.paperclip,
-                tooltip: 'Прикрепить файл',
-                onTap: () => _pickFile(context, ref),
+              Expanded(
+                child: _AttachButton(
+                  icon: AppIcon.paperclip,
+                  tooltip: 'Прикрепить файл',
+                  onTap: () => _pickFile(context, ref),
+                ),
               ),
             ],
           ),
@@ -803,16 +931,23 @@ class _Attachments extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: AttachmentFileButton(
-                  key: ValueKey(entry.file.attachmentId),
-                  attachmentKey: (
-                    checklistId: checklistId,
-                    answerId: answer.id,
-                    file: entry.file,
-                  ),
-                  kind: entry.kind,
-                  onRemove: readOnly ? null : () => ref
-                      .read(fillingControllerProvider(checklistId).notifier)
-                      .removeAttachment(item.id, entry.file.attachmentId),
+                    key: ValueKey(entry.file.attachmentId),
+                    attachmentKey: (
+                      checklistId: checklistId,
+                      answerId: answer.id,
+                      file: entry.file,
+                    ),
+                    kind: entry.kind,
+                    onRemove: readOnly
+                        ? null
+                        : () => ref
+                              .read(
+                                fillingControllerProvider(checklistId).notifier,
+                              )
+                              .removeAttachment(
+                                item.id,
+                                entry.file.attachmentId,
+                              ),
                   ),
                 ),
             ],
@@ -822,8 +957,15 @@ class _Attachments extends ConsumerWidget {
     );
   }
 
-  Future<void> _chooseMedia(BuildContext context, WidgetRef ref, String kind) async {
-    final source = await showMediaSourceSheet(context: context, video: kind == 'video');
+  Future<void> _chooseMedia(
+    BuildContext context,
+    WidgetRef ref,
+    String kind,
+  ) async {
+    final source = await showMediaSourceSheet(
+      context: context,
+      video: kind == 'video',
+    );
     if (source == null || !context.mounted) return;
     await _pick(context, ref, source, kind);
   }
@@ -840,31 +982,51 @@ class _Attachments extends ConsumerWidget {
         final file = await picker.pickVideo(source: source);
         if (file == null) return;
         final bytes = await file.readAsBytes();
-        await ref.read(fillingControllerProvider(checklistId).notifier).addAttachment(
+        await ref
+            .read(fillingControllerProvider(checklistId).notifier)
+            .addAttachment(
               item: item,
               filename: file.name,
               bytes: bytes,
-              contentType: lookupMimeType(file.name, headerBytes: bytes.take(32).toList())
-                  ?? 'video/mp4',
+              contentType:
+                  lookupMimeType(
+                    file.name,
+                    headerBytes: bytes.take(32).toList(),
+                  ) ??
+                  'video/mp4',
               kind: 'video',
             );
       } else {
-        final file = await picker.pickImage(source: source, maxWidth: 1920, imageQuality: 80);
+        final file = await picker.pickImage(
+          source: source,
+          maxWidth: 1920,
+          imageQuality: 80,
+        );
         if (file == null) return;
         final bytes = await file.readAsBytes();
-        await ref.read(fillingControllerProvider(checklistId).notifier).addAttachment(
+        await ref
+            .read(fillingControllerProvider(checklistId).notifier)
+            .addAttachment(
               item: item,
               filename: file.name,
               bytes: bytes,
-              contentType: lookupMimeType(file.name, headerBytes: bytes.take(32).toList())
-                  ?? 'image/jpeg',
+              contentType:
+                  lookupMimeType(
+                    file.name,
+                    headerBytes: bytes.take(32).toList(),
+                  ) ??
+                  'image/jpeg',
               kind: 'photo',
             );
       }
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error is ApiException ? error.message : 'Не удалось загрузить файл')),
+        SnackBar(
+          content: Text(
+            error is ApiException ? error.message : 'Не удалось загрузить файл',
+          ),
+        ),
       );
     }
   }
@@ -874,25 +1036,39 @@ class _Attachments extends ConsumerWidget {
       final result = await FilePicker.platform.pickFiles(withData: true);
       final file = result?.files.firstOrNull;
       if (file?.bytes == null) return;
-      await ref.read(fillingControllerProvider(checklistId).notifier).addAttachment(
+      await ref
+          .read(fillingControllerProvider(checklistId).notifier)
+          .addAttachment(
             item: item,
             filename: file!.name,
             bytes: file.bytes!,
-            contentType: lookupMimeType(file.name, headerBytes: file.bytes!.take(32).toList())
-                ?? 'application/octet-stream',
+            contentType:
+                lookupMimeType(
+                  file.name,
+                  headerBytes: file.bytes!.take(32).toList(),
+                ) ??
+                'application/octet-stream',
             kind: 'other',
           );
     } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error is ApiException ? error.message : 'Не удалось загрузить файл')),
+        SnackBar(
+          content: Text(
+            error is ApiException ? error.message : 'Не удалось загрузить файл',
+          ),
+        ),
       );
     }
   }
 }
 
 class _AttachButton extends StatelessWidget {
-  const _AttachButton({required this.icon, required this.tooltip, required this.onTap});
+  const _AttachButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
 
   final String icon;
   final String tooltip;
@@ -903,14 +1079,14 @@ class _AttachButton extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(28),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(28),
           child: SizedBox(
-            width: 56,
-            height: 56,
+            width: double.infinity,
+            height: 46,
             child: Center(child: AppIcon(icon, size: 24)),
           ),
         ),

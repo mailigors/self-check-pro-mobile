@@ -21,8 +21,8 @@ void main() {
           ),
           now,
         );
-    expect(resolve(ChecklistStatusCode.completed).tone, AppTagTone.success);
-    expect(resolve(ChecklistStatusCode.inWork).tone, AppTagTone.warning);
+    expect(resolve(ChecklistStatusCode.completed).tone, AppTagTone.draft);
+    expect(resolve(ChecklistStatusCode.inWork).tone, AppTagTone.success);
     expect(resolve(ChecklistStatusCode.draft).tone, AppTagTone.draft);
     expect(
       resolve(

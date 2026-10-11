@@ -98,7 +98,7 @@ class AppShell extends StatelessWidget {
               selectedIndex: navigationShell.currentIndex,
               onDestinationSelected: navigationShell.goBranch,
               labelType: NavigationRailLabelType.all,
-              backgroundColor: AppColors.surface,
+              backgroundColor: AppColors.background,
               selectedIconTheme: const IconThemeData(color: AppColors.brand),
               selectedLabelTextStyle: AppText.bodyH5(color: AppColors.brand),
               destinations: const [
@@ -127,7 +127,7 @@ class AppShell extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: navigationShell.goBranch,
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.background,
         indicatorColor: AppColors.brandSoft,
         destinations: const [
           NavigationDestination(

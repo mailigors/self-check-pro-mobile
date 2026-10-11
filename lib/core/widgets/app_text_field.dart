@@ -21,6 +21,7 @@ class AppTextField extends StatefulWidget {
     this.onTap,
     this.suffix,
     this.prefix,
+    this.fillColor = AppColors.surface,
   });
 
   final String? label;
@@ -37,6 +38,7 @@ class AppTextField extends StatefulWidget {
   final VoidCallback? onTap;
   final Widget? suffix;
   final Widget? prefix;
+  final Color fillColor;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -63,9 +65,11 @@ class _AppTextFieldState extends State<AppTextField> {
   Widget build(BuildContext context) {
     final isError = widget.errorText != null && widget.errorText!.isNotEmpty;
     final borderColor = isError ? AppColors.error : AppColors.border;
-    final suffix = widget.suffix ??
+    final suffix =
+        widget.suffix ??
         (widget.obscureText
             ? IconButton(
+                tooltip: _obscured ? 'Показать пароль' : 'Скрыть пароль',
                 onPressed: () => setState(() => _obscured = !_obscured),
                 padding: EdgeInsets.zero,
                 visualDensity: VisualDensity.compact,
@@ -85,7 +89,8 @@ class _AppTextFieldState extends State<AppTextField> {
             widget.label!,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppText.bodyH4(),
+            style: AppText.bodyH5(color: AppColors.text)
+                .copyWith(fontWeight: FontWeight.w600, letterSpacing: 0.8),
           ),
           const SizedBox(height: 6),
         ],
@@ -99,38 +104,66 @@ class _AppTextFieldState extends State<AppTextField> {
           maxLines: widget.maxLines,
           onChanged: widget.onChanged,
           onTap: widget.onTap,
+          onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
           cursorColor: AppColors.brand,
           style: AppText.bodyH3(),
           decoration: InputDecoration(
             hintText: widget.hint,
             hintStyle: AppText.bodyH3(color: AppColors.placeholder),
             filled: true,
-            fillColor: AppColors.surface,
+            fillColor: widget.fillColor,
             prefixIcon: widget.prefix,
             suffixIcon: suffix,
-            prefixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 24, maxHeight: 56),
-            suffixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 24, maxHeight: 56),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 48,
+              minHeight: 24,
+              maxHeight: 56,
+            ),
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 48,
+              minHeight: 24,
+              maxHeight: 56,
+            ),
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
             constraints: const BoxConstraints(minHeight: 56),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(
+                widget.maxLines == 1 ? 28 : 20,
+              ),
               borderSide: BorderSide(color: borderColor, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: isError ? AppColors.error : AppColors.brand, width: 1),
+              borderRadius: BorderRadius.circular(
+                widget.maxLines == 1 ? 28 : 20,
+              ),
+              borderSide: BorderSide(
+                color: isError ? AppColors.error : AppColors.brand,
+                width: 1,
+              ),
             ),
             disabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.borderSubtle, width: 1),
+              borderRadius: BorderRadius.circular(
+                widget.maxLines == 1 ? 28 : 20,
+              ),
+              borderSide: const BorderSide(
+                color: AppColors.borderSubtle,
+                width: 1,
+              ),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(
+                widget.maxLines == 1 ? 28 : 20,
+              ),
               borderSide: const BorderSide(color: AppColors.error, width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(
+                widget.maxLines == 1 ? 28 : 20,
+              ),
               borderSide: const BorderSide(color: AppColors.error, width: 1),
             ),
           ),
@@ -142,7 +175,10 @@ class _AppTextFieldState extends State<AppTextField> {
               const AppIcon(AppIcon.warning, size: 16, color: AppColors.error),
               const SizedBox(width: 6),
               Expanded(
-                child: Text(widget.errorText!, style: AppText.bodyH5(color: AppColors.error)),
+                child: Text(
+                  widget.errorText!,
+                  style: AppText.bodyH5(color: AppColors.error),
+                ),
               ),
             ],
           ),

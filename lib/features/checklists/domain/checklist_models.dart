@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../core/utils/json_helpers.dart';
@@ -25,25 +26,25 @@ enum ChecklistExportFormat {
   excel;
 
   String get pathSuffix => switch (this) {
-        pdf => 'pdf',
-        excel => 'excel',
-      };
+    pdf => 'pdf',
+    excel => 'excel',
+  };
 
   String get fileExtension => switch (this) {
-        pdf => 'pdf',
-        excel => 'xlsx',
-      };
+    pdf => 'pdf',
+    excel => 'xlsx',
+  };
 
   String get mimeType => switch (this) {
-        pdf => 'application/pdf',
-        excel =>
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      };
+    pdf => 'application/pdf',
+    excel =>
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  };
 
   String get label => switch (this) {
-        pdf => 'PDF',
-        excel => 'Excel',
-      };
+    pdf => 'PDF',
+    excel => 'Excel',
+  };
 }
 
 class ChecklistExportFile {
@@ -109,8 +110,9 @@ class ChecklistSummary {
   final DateTime? endAt;
   final double? controlResult;
 
-  String get title =>
-      schedule?.name.isNotEmpty == true ? schedule!.name : (template?.name ?? 'Чек-лист');
+  String get title => schedule?.name.isNotEmpty == true
+      ? schedule!.name
+      : (template?.name ?? 'Чек-лист');
 
   String get formattedControlResult {
     final value = controlResult;
@@ -124,14 +126,19 @@ class ChecklistSummary {
       schedule: json['inspectionSchedule'] == null
           ? null
           : NamedEntity.fromJson(json['inspectionSchedule']),
-      template: json['template'] == null ? null : NamedEntity.fromJson(json['template']),
-      controlObject:
-          json['controlObject'] == null ? null : NamedEntity.fromJson(json['controlObject']),
+      template: json['template'] == null
+          ? null
+          : NamedEntity.fromJson(json['template']),
+      controlObject: json['controlObject'] == null
+          ? null
+          : NamedEntity.fromJson(json['controlObject']),
       user: json['user'] == null ? null : NamedEntity.fromJson(json['user']),
       status: ChecklistStatusInfo.fromJson(json['status']),
       startAt: DateTime.tryParse(asString(json['start_at']) ?? ''),
       endAt: DateTime.tryParse(asString(json['end_at']) ?? ''),
-      controlResult: _parseControlResult(pick(json, ['control_result', 'controlResult'])),
+      controlResult: _parseControlResult(
+        pick(json, ['control_result', 'controlResult']),
+      ),
     );
   }
 
@@ -160,13 +167,13 @@ class UiChecklistStatus {
       case ChecklistStatusCode.inWork:
         return const UiChecklistStatus(
           label: 'В работе',
-          tone: AppTagTone.warning,
+          tone: AppTagTone.success,
           actionLabel: 'Продолжить',
         );
       case ChecklistStatusCode.completed:
         return const UiChecklistStatus(
-          label: 'Завершен',
-          tone: AppTagTone.success,
+          label: 'Завершён',
+          tone: AppTagTone.draft,
           actionLabel: 'Возобновить',
         );
       case ChecklistStatusCode.draft:
@@ -187,7 +194,11 @@ class UiChecklistStatus {
 }
 
 class AttachmentRef {
-  const AttachmentRef({required this.attachmentId, this.filename, this.contentType});
+  const AttachmentRef({
+    required this.attachmentId,
+    this.filename,
+    this.contentType,
+  });
 
   final int attachmentId;
   final String? filename;
@@ -208,6 +219,81 @@ class AttachmentRef {
   Map<String, dynamic> toPayload() => {'attachmentId': attachmentId};
 }
 
+// Older API responses can contain a serialized Java map instead of JSON.
+List<String> _splitSettings(String text) {
+  final parts = <String>[];
+  var depth = 0;
+  String? quote;
+  var start = 0;
+  for (var i = 0; i < text.length; i++) {
+    final char = text[i];
+    if (quote != null) {
+      if (char == quote && (i == 0 || text[i - 1] != r'\')) quote = null;
+    } else if (char == '"' || char == "'") {
+      quote = char;
+    } else if ('[{('.contains(char)) {
+      depth++;
+    } else if (']})'.contains(char)) {
+      depth--;
+    } else if (char == ',' && depth == 0) {
+      parts.add(text.substring(start, i).trim());
+      start = i + 1;
+    }
+  }
+  parts.add(text.substring(start).trim());
+  return parts.where((part) => part.isNotEmpty).toList();
+}
+
+dynamic _settingsValue(String raw) {
+  final text = raw.trim();
+  try {
+    return jsonDecode(text);
+  } on FormatException {
+    if (text.startsWith('[') && text.endsWith(']')) {
+      return _splitSettings(text.substring(1, text.length - 1))
+          .map(_settingsValue)
+          .toList();
+    }
+    if (text.startsWith('{') && text.endsWith('}')) {
+      final result = <String, dynamic>{};
+      for (final part in _splitSettings(text.substring(1, text.length - 1))) {
+        final separator = part.indexOf(RegExp(r'[=:]'));
+        if (separator > 0) {
+          result[part.substring(0, separator).trim()] = _settingsValue(
+            part.substring(separator + 1),
+          );
+        }
+      }
+      return result;
+    }
+    if (text.length >= 2 && text.startsWith("'") && text.endsWith("'")) {
+      return text.substring(1, text.length - 1);
+    }
+    return text;
+  }
+}
+
+Map<String, dynamic> _settingsMap(dynamic raw) {
+  if (raw is String) raw = _settingsValue(raw);
+  if (raw is List) return {'options': raw};
+  final json = asMap(raw);
+  final recovered = <String, dynamic>{};
+  for (final entry in json.entries) {
+    if (entry.key.startsWith('{')) {
+      recovered.addAll(
+        asMap(
+          _settingsValue(
+            entry.key.contains('=') && entry.key.endsWith('}')
+                ? entry.key
+                : '${entry.key}:${entry.value}',
+          ),
+        ),
+      );
+    }
+  }
+  return {...recovered, ...json};
+}
+
 class ItemSettings {
   const ItemSettings({
     this.placeholder,
@@ -223,6 +309,7 @@ class ItemSettings {
     this.labelStart,
     this.labelEnd,
     this.options = const [],
+    this.optionLabels = const {},
     this.uiHint,
     this.minSelections,
     this.maxSelections,
@@ -245,6 +332,7 @@ class ItemSettings {
   final String? labelStart;
   final String? labelEnd;
   final List<String> options;
+  final Map<String, String> optionLabels;
   final String? uiHint;
   final int? minSelections;
   final int? maxSelections;
@@ -254,19 +342,32 @@ class ItemSettings {
   final String? maxDatetime;
 
   factory ItemSettings.fromJson(dynamic raw) {
-    final json = asMap(raw);
-    final optionsRaw = asList(pick(json, ['options']));
-    final options = optionsRaw.map((item) {
-      if (item is String) return item;
+    final json = _settingsMap(raw);
+    dynamic optionsValue = json['options'];
+    if (optionsValue is String) {
+      final parsed = _settingsValue(optionsValue);
+      optionsValue = parsed is String ? _splitSettings(parsed) : parsed;
+    }
+    final labels = <String, String>{};
+    final options = <String>[];
+    for (final item in asList(optionsValue)) {
+      if (item == null) continue;
       final map = asMap(item);
-      return asString(pick(map, ['label', 'name', 'value'])) ?? '$item';
-    }).toList();
+      final value = map.isEmpty
+          ? asString(item)
+          : asString(pick(map, ['value', 'text', 'label', 'name']));
+      if (value == null || value.trim().isEmpty || options.contains(value)) {
+        continue;
+      }
+      options.add(value);
+      labels[value] = asString(pick(map, ['label', 'text', 'name'])) ?? value;
+    }
     return ItemSettings(
       placeholder: asString(json['placeholder']),
-      minLength: asInt(json['min_length']),
-      maxLength: asInt(json['max_length']),
-      minValue: asDouble(json['min_value']),
-      maxValue: asDouble(json['max_value']),
+      minLength: asInt(pick(json, ['min_length', 'minLength'])),
+      maxLength: asInt(pick(json, ['max_length', 'maxLength'])),
+      minValue: asDouble(pick(json, ['min_value', 'minValue'])),
+      maxValue: asDouble(pick(json, ['max_value', 'maxValue'])),
       unit: asString(json['unit']),
       precision: asInt(json['precision']),
       min: asInt(json['min']),
@@ -275,13 +376,14 @@ class ItemSettings {
       labelStart: asString(json['label_start']),
       labelEnd: asString(json['label_end']),
       options: options,
-      uiHint: asString(json['ui_hint']),
+      optionLabels: labels,
+      uiHint: asString(pick(json, ['ui_hint', 'uiHint'])),
       minSelections: asInt(json['min_selections']),
       maxSelections: asInt(json['max_selections']),
-      minDate: asString(json['min_date']),
-      maxDate: asString(json['max_date']),
-      minDatetime: asString(json['min_datetime']),
-      maxDatetime: asString(json['max_datetime']),
+      minDate: asString(pick(json, ['min_date', 'minDate'])),
+      maxDate: asString(pick(json, ['max_date', 'maxDate'])),
+      minDatetime: asString(pick(json, ['min_datetime', 'minDatetime'])),
+      maxDatetime: asString(pick(json, ['max_datetime', 'maxDatetime'])),
     );
   }
 }
@@ -316,8 +418,15 @@ class TemplateItem {
       id: asInt(json['id']) ?? 0,
       name: asString(json['name']) ?? '',
       description: asString(json['description']),
-      questionType: (asString(json['question_type']) ?? 'text').toLowerCase(),
-      settings: ItemSettings.fromJson(json['settings']),
+      questionType:
+          (asString(pick(json, ['question_type', 'questionType', 'type'])) ??
+                  'text')
+              .toLowerCase()
+              .replaceAll('-', '_'),
+      settings: ItemSettings.fromJson({
+        ..._settingsMap(json['settings']),
+        if (json['options'] != null) 'options': json['options'],
+      }),
       required: asBool(json['required']) ?? false,
       photoRequired: asBool(json['photo_required']) ?? false,
       videoRequired: asBool(json['video_required']) ?? false,
@@ -345,11 +454,12 @@ class TemplateSection {
   final List<TemplateItem> items;
 
   factory TemplateSection.fromJson(Map<String, dynamic> json) {
-    final items = asList(json['items'])
-        .map((item) => TemplateItem.fromJson(asMap(item)))
-        .where((item) => item.active)
-        .toList()
-      ..sort((a, b) => a.order.compareTo(b.order));
+    final items =
+        asList(json['items'])
+            .map((item) => TemplateItem.fromJson(asMap(item)))
+            .where((item) => item.active)
+            .toList()
+          ..sort((a, b) => a.order.compareTo(b.order));
     return TemplateSection(
       id: asInt(json['id']) ?? 0,
       name: asString(json['name']) ?? '',
@@ -373,11 +483,12 @@ class ChecklistTemplate {
   final List<TemplateSection> sections;
 
   factory ChecklistTemplate.fromJson(Map<String, dynamic> json) {
-    final sections = asList(json['sections'])
-        .map((item) => TemplateSection.fromJson(asMap(item)))
-        .where((section) => section.active)
-        .toList()
-      ..sort((a, b) => a.order.compareTo(b.order));
+    final sections =
+        asList(json['sections'])
+            .map((item) => TemplateSection.fromJson(asMap(item)))
+            .where((section) => section.active)
+            .toList()
+          ..sort((a, b) => a.order.compareTo(b.order));
     return ChecklistTemplate(
       id: asInt(json['id']) ?? 0,
       name: asString(json['name']) ?? '',
@@ -410,7 +521,10 @@ class ItemAnswer {
       List list => list.isNotEmpty,
       _ => true,
     };
-    return !hasValue && photoIds.isEmpty && videoIds.isEmpty && otherIds.isEmpty;
+    return !hasValue &&
+        photoIds.isEmpty &&
+        videoIds.isEmpty &&
+        otherIds.isEmpty;
   }
 
   bool get hasComment => comment != null;
@@ -437,7 +551,10 @@ class ItemAnswer {
 
   factory ItemAnswer.fromJson(Map<String, dynamic> json) {
     List<AttachmentRef> parseFiles(dynamic raw) =>
-        asList(raw).map(AttachmentRef.fromJson).where((item) => item.attachmentId != 0).toList();
+        asList(raw)
+            .map(AttachmentRef.fromJson)
+            .where((item) => item.attachmentId != 0)
+            .toList();
     return ItemAnswer(
       id: asInt(json['id']),
       value: json['answer'],
@@ -513,7 +630,9 @@ class PagedChecklists {
 
   factory PagedChecklists.fromJson(Map<String, dynamic> json) {
     return PagedChecklists(
-      items: asList(json['content']).map((item) => ChecklistSummary.fromJson(asMap(item))).toList(),
+      items: asList(json['content'])
+          .map((item) => ChecklistSummary.fromJson(asMap(item)))
+          .toList(),
       page: asInt(json['number']) ?? 0,
       totalPages: asInt(json['totalPages']) ?? 1,
     );
