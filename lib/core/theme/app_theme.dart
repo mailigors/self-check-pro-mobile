@@ -9,23 +9,35 @@ abstract final class AppTheme {
     displayMedium: TextStyle(fontFamily: AppText.family, color: AppColors.text),
     displaySmall: TextStyle(fontFamily: AppText.family, color: AppColors.text),
     headlineLarge: TextStyle(fontFamily: AppText.family, color: AppColors.text),
-    headlineMedium: TextStyle(fontFamily: AppText.family, color: AppColors.text),
+    headlineMedium: TextStyle(
+      fontFamily: AppText.family,
+      color: AppColors.text,
+    ),
     headlineSmall: TextStyle(fontFamily: AppText.family, color: AppColors.text),
     titleLarge: TextStyle(fontFamily: AppText.family, color: AppColors.text),
     titleMedium: TextStyle(fontFamily: AppText.family, color: AppColors.text),
     titleSmall: TextStyle(fontFamily: AppText.family, color: AppColors.text),
     bodyLarge: TextStyle(fontFamily: AppText.family, color: AppColors.text),
     bodyMedium: TextStyle(fontFamily: AppText.family, color: AppColors.text),
-    bodySmall: TextStyle(fontFamily: AppText.family, color: AppColors.textSecondary),
+    bodySmall: TextStyle(
+      fontFamily: AppText.family,
+      color: AppColors.textSecondary,
+    ),
     labelLarge: TextStyle(fontFamily: AppText.family, color: AppColors.text),
-    labelMedium: TextStyle(fontFamily: AppText.family, color: AppColors.textSecondary),
-    labelSmall: TextStyle(fontFamily: AppText.family, color: AppColors.textSecondary),
+    labelMedium: TextStyle(
+      fontFamily: AppText.family,
+      color: AppColors.textSecondary,
+    ),
+    labelSmall: TextStyle(
+      fontFamily: AppText.family,
+      color: AppColors.textSecondary,
+    ),
   );
 
   static OutlineInputBorder _border(Color color) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: color, width: 1),
-      );
+    borderRadius: BorderRadius.circular(28),
+    borderSide: BorderSide(color: color, width: 1),
+  );
 
   static ThemeData light() {
     return ThemeData(
@@ -53,7 +65,10 @@ abstract final class AppTheme {
         filled: true,
         fillColor: AppColors.surface,
         hintStyle: AppText.bodyH3(color: AppColors.placeholder),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         border: _border(AppColors.border),
         enabledBorder: _border(AppColors.border),
         focusedBorder: _border(AppColors.brand),
@@ -62,17 +77,19 @@ abstract final class AppTheme {
         disabledBorder: _border(AppColors.borderSubtle),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.background,
         elevation: 0,
         height: 64,
         indicatorColor: AppColors.brandSoft,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return AppText.bodyH5(color: selected ? AppColors.brand : AppColors.textSecondary);
+          return AppText.bodyH5(
+            color: selected ? AppColors.brand : AppColors.textSecondary,
+          );
         }),
       ),
       navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.background,
         selectedIconTheme: const IconThemeData(color: AppColors.brand),
         unselectedIconTheme: const IconThemeData(color: AppColors.text),
         selectedLabelTextStyle: AppText.bodyH5(color: AppColors.brand),
@@ -80,6 +97,7 @@ abstract final class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
+        insetPadding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
         backgroundColor: AppColors.text,
         contentTextStyle: AppText.bodyH4(color: AppColors.surface),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),

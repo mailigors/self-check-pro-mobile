@@ -22,6 +22,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _next = TextEditingController();
   final _confirm = TextEditingController();
   bool _busy = false;
+  bool _securityOpen = false;
   String? _formError;
 
   @override
@@ -45,7 +46,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       return;
     }
     if (next.length < 8) {
-      setState(() => _formError = 'Новый пароль должен содержать минимум 8 символов');
+      setState(
+        () => _formError = 'Новый пароль должен содержать минимум 8 символов',
+      );
       return;
     }
     setState(() {
@@ -53,7 +56,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _formError = null;
     });
     try {
-      await ref.read(authControllerProvider.notifier).changePassword(
+      await ref
+          .read(authControllerProvider.notifier)
+          .changePassword(
             currentPassword: current,
             newPassword: next,
             confirmPassword: confirm,
@@ -62,12 +67,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _current.clear();
       _next.clear();
       _confirm.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Пароль изменён')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Пароль изменён')));
     } catch (error) {
       setState(() {
-        _formError = error is ApiException ? error.message : 'Не удалось изменить пароль';
+        _formError = error is ApiException
+            ? error.message
+            : 'Не удалось изменить пароль';
       });
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -97,75 +103,169 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(40),
+                        borderRadius: BorderRadius.circular(32),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Center(
-                            child: CircleAvatar(
-                              radius: 32,
-                              backgroundColor: AppColors.brandSoft,
-                              child: Text(
-                                user?.initials ?? 'U',
-                                style: AppText.headlineH5(color: AppColors.brand).copyWith(fontSize: 20),
+                          Row(
+                            children: [
+                              Container(
+                                width: 58,
+                                height: 58,
+                                decoration: BoxDecoration(
+                                  color: AppColors.brand,
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  user?.initials ?? 'U',
+                                  style: AppText.titleH2(
+                                    color: AppColors.surface,
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      user?.fullName ?? 'Пользователь',
+                                      style: AppText.headlineH5().copyWith(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      [user?.email, user?.roleName]
+                                          .whereType<String>()
+                                          .where((v) => v.isNotEmpty)
+                                          .join(' · '),
+                                      style: AppText.bodyH5(
+                                        color: AppColors.text,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 20),
-                          _info('ФИО', user?.fullName),
-                          _info('Email', user?.email),
-                          _info('Организация', user?.organizationName),
-                          _info('Должность', user?.positionName),
-                          _info('Роль', user?.roleName),
-                          _info(
-                            'Объекты контроля',
-                            user?.controlObjects.isEmpty == true
-                                ? '—'
-                                : user?.controlObjects.join(', '),
+                          const SizedBox(height: 12),
+                          Material(
+                            color: Colors.transparent,
+                            child: ExpansionTile(
+                              tilePadding: EdgeInsets.zero,
+                              title: Text(
+                                'Данные профиля',
+                                style: AppText.bodyH4(color: AppColors.text),
+                              ),
+                              children: [
+                                _info('Организация', user?.organizationName),
+                                _info('Должность', user?.positionName),
+                                _info('Роль', user?.roleName),
+                                _info(
+                                  'Объекты контроля',
+                                  user?.controlObjects.isEmpty == true
+                                      ? '—'
+                                      : user?.controlObjects.join(', '),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(40),
-                      ),
+                    Material(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(28),
+                      clipBehavior: Clip.antiAlias,
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Смена пароля', style: AppText.headlineH5()),
-                          const SizedBox(height: 16),
-                          AppTextField(
-                            label: 'Текущий пароль',
-                            controller: _current,
-                            obscureText: true,
+                          ListTile(
+                            leading: const Icon(
+                              Icons.shield_outlined,
+                              color: AppColors.brand,
+                            ),
+                            title: Text(
+                              'Безопасность',
+                              style: AppText.headlineH5(),
+                            ),
+                            trailing: Icon(
+                              _securityOpen
+                                  ? Icons.expand_less
+                                  : Icons.chevron_right,
+                            ),
+                            onTap: () =>
+                                setState(() => _securityOpen = !_securityOpen),
                           ),
-                          const SizedBox(height: 12),
-                          AppTextField(
-                            label: 'Новый пароль',
-                            controller: _next,
-                            obscureText: true,
-                          ),
-                          const SizedBox(height: 12),
-                          AppTextField(
-                            label: 'Подтверждение',
-                            controller: _confirm,
-                            obscureText: true,
-                            errorText: _formError,
-                          ),
-                          const SizedBox(height: 20),
-                          AppButton(
-                            label: 'Изменить пароль',
-                            loading: _busy,
-                            onPressed: _busy ? null : _changePassword,
+                          const Divider(height: 1),
+                          ListTile(
+                            leading: const Icon(
+                              Icons.info_outline_rounded,
+                              color: AppColors.brand,
+                            ),
+                            title: Text(
+                              'О приложении',
+                              style: AppText.headlineH5(),
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => showAboutDialog(
+                              context: context,
+                              applicationName: 'SelfCheckPro',
+                              applicationVersion: '1.0.0',
+                              children: [
+                                Text(
+                                  'Контроль качества · аудиты · чек-листы',
+                                  style: AppText.bodyH4(),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    if (_securityOpen)
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Смена пароля', style: AppText.headlineH5()),
+                            const SizedBox(height: 16),
+                            AppTextField(
+                              label: 'Текущий пароль',
+                              controller: _current,
+                              obscureText: true,
+                            ),
+                            const SizedBox(height: 12),
+                            AppTextField(
+                              label: 'Новый пароль',
+                              controller: _next,
+                              obscureText: true,
+                            ),
+                            const SizedBox(height: 12),
+                            AppTextField(
+                              label: 'Подтверждение',
+                              controller: _confirm,
+                              obscureText: true,
+                              errorText: _formError,
+                            ),
+                            const SizedBox(height: 20),
+                            AppButton(
+                              label: 'Изменить пароль',
+                              loading: _busy,
+                              onPressed: _busy ? null : _changePassword,
+                            ),
+                          ],
+                        ),
+                      ),
                     const SizedBox(height: 16),
                     AppButton(
                       label: 'Выйти',

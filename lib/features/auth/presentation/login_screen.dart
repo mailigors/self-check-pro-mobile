@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
+import '../../../core/widgets/app_brand.dart';
 
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/network/api_exception.dart';
@@ -22,7 +23,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _password = TextEditingController();
   String? _error;
 
-  bool get _canSubmit => _email.text.trim().isNotEmpty && _password.text.isNotEmpty;
+  bool get _canSubmit =>
+      _email.text.trim().isNotEmpty && _password.text.isNotEmpty;
 
   @override
   void initState() {
@@ -42,10 +44,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!_canSubmit) return;
     setState(() => _error = null);
     try {
-      await ref.read(authControllerProvider.notifier).login(
-            _email.text.trim(),
-            _password.text,
-          );
+      await ref
+          .read(authControllerProvider.notifier)
+          .login(_email.text.trim(), _password.text);
     } catch (error) {
       setState(() {
         _error = error is ApiException
@@ -61,64 +62,71 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final loading = auth.isLoading;
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: AppPage(
-        maxWidth: 480,
-        child: Column(
-          children: [
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 24),
-                child: SvgPicture.asset(
-                  'assets/images/logo.svg',
-                  height: 36,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-                decoration: const BoxDecoration(
+      body: SafeArea(
+        child: AppPage(
+          maxWidth: 480,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(28, 56, 28, 24),
+            children: [
+              const AppBrand(),
+              const SizedBox(height: 44),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+                  borderRadius: BorderRadius.circular(36),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.shadow,
+                      blurRadius: 24,
+                      offset: Offset(0, 12),
+                    ),
+                  ],
                 ),
-                child: SafeArea(
-                  top: false,
-                  child: ListView(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text('Вход', style: AppText.titleH1()),
-                      ),
-                      const SizedBox(height: 24),
-                      AppTextField(
-                        label: 'Логин',
-                        controller: _email,
-                        keyboardType: TextInputType.emailAddress,
-                        hint: 'Введите логин',
-                      ),
-                      const SizedBox(height: 16),
-                      AppTextField(
-                        label: 'Пароль',
-                        controller: _password,
-                        obscureText: true,
-                        hint: 'Введите пароль',
-                        errorText: _error,
-                      ),
-                      const SizedBox(height: 24),
-                      AppButton(
-                        label: 'Войти',
-                        loading: loading,
-                        onPressed: loading || !_canSubmit ? null : _submit,
-                      ),
-                    ],
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Вход', style: AppText.titleH1()),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Введите логин и пароль',
+                      style: AppText.bodyH4(color: AppColors.text),
+                    ),
+                    const SizedBox(height: 32),
+                    AppTextField(
+                      label: 'ЛОГИН',
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      fillColor: AppColors.background,
+                      hint: 'Введите логин',
+                    ),
+                    const SizedBox(height: 24),
+                    AppTextField(
+                      label: 'ПАРОЛЬ',
+                      controller: _password,
+                      obscureText: true,
+                      hint: 'Введите пароль',
+                      fillColor: AppColors.background,
+                      errorText: _error,
+                    ),
+                    const SizedBox(height: 24),
+                    AppButton(
+                      label: 'Войти',
+                      icon: Icons.arrow_forward_rounded,
+                      loading: loading,
+                      onPressed: loading || !_canSubmit ? null : _submit,
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              Text(
+                'Данные защищены',
+                textAlign: TextAlign.center,
+                style: AppText.bodyH5(),
+              ),
+            ],
+          ),
         ),
       ),
     );

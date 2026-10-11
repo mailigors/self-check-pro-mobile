@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
-  static const background = Color(0xFFF6F8F9);
+  static const background = Color(0xFFF5F4F0);
+  static const surfaceMuted = Color(0xFFEDECE6);
+  static const successSoft = Color(0xFFE2F1E9);
   static const surface = Color(0xFFFFFFFF);
-  static const text = Color(0xFF242424);
-  static const textSecondary = Color(0xFF95A0A9);
-  static const placeholder = Color(0xFFACB3B9);
-  static const brand = Color(0xFF39A6FF);
-  static const brandSoft = Color(0xFFEAF6FF);
-  static const border = Color(0xFFD9D9D9);
-  static const borderSubtle = Color(0xFFE8EDF2);
-  static const success = Color(0xFF00CE07);
-  static const warning = Color(0xFFE29600);
-  static const error = Color(0xFFFF4427);
-  static const draft = Color(0xFF6C6C6C);
-  static const overlay = Color(0x4D000000);
-  static const shadow = Color(0x1F656565);
+  static const text = Color(0xFF1C1C19);
+  static const textSecondary = Color(0xFF73736D);
+  static const placeholder = Color(0xFF969791);
+  static const brand = Color(0xFFEC502C);
+  static const brandSoft = Color(0xFFFBE8E1);
+  static const border = Color(0xFFE2E1DC);
+  static const borderSubtle = Color(0xFFEBEAE5);
+  static const success = Color(0xFF438F66);
+  static const warning = Color(0xFFA66B23);
+  static const error = Color(0xFFDC492C);
+  static const draft = Color(0xFF73736D);
+  static const overlay = Color(0x66000000);
+  static const shadow = Color(0x121C1C19);
 }

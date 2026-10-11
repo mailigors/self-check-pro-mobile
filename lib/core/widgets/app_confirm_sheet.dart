@@ -33,7 +33,7 @@ Future<bool?> showAppConfirmSheet({
                 width: 36,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD5DBE1),
+                  color: AppColors.brand,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),

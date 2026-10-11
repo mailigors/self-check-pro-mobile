@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
-import 'app_icon.dart';
 
 class AppHeader extends StatelessWidget {
   const AppHeader({
@@ -10,56 +9,46 @@ class AppHeader extends StatelessWidget {
     required this.title,
     this.onBack,
     this.onProfile,
+    this.action,
   });
-
   final String title;
   final VoidCallback? onBack;
   final VoidCallback? onProfile;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       child: Row(
         children: [
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: onBack == null
-                ? null
-                : GestureDetector(
-                    onTap: onBack,
-                    behavior: HitTestBehavior.opaque,
-                    child: const AppIcon(AppIcon.back, size: 24),
-                  ),
-          ),
-          const SizedBox(width: 24),
+          if (onBack != null) ...[
+            IconButton.filledTonal(
+              tooltip: 'Назад',
+              onPressed: onBack,
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.surface,
+                foregroundColor: AppColors.text,
+              ),
+              icon: const Icon(Icons.chevron_left_rounded),
+            ),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: Text(
               title,
-              textAlign: TextAlign.center,
-              maxLines: 1,
+              maxLines: onBack == null ? 1 : 2,
               overflow: TextOverflow.ellipsis,
-              style: AppText.headlineH5(),
+              style: onBack == null ? AppText.titleH1() : AppText.titleH2(),
             ),
           ),
-          const SizedBox(width: 24),
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: onProfile == null
-                ? null
-                : GestureDetector(
-                    onTap: onProfile,
-                    behavior: HitTestBehavior.opaque,
-                    child: const AppIcon(AppIcon.user, size: 24),
-                  ),
-          ),
+          ?action,
+          if (onProfile != null)
+            IconButton(
+              tooltip: 'Профиль',
+              onPressed: onProfile,
+              icon: const Icon(Icons.person_outline_rounded),
+            ),
         ],
       ),
     );
