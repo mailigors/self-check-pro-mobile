@@ -6,31 +6,18 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>ru</string>
-	<key>CFBundleLocalizations</key>
-	<array>
-		<string>ru</string>
-	</array>
 	<key>CFBundleDisplayName</key>
 	<string>Self-Check Pro</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
-	<key>NSCameraUsageDescription</key>
-	<string>Нужен доступ к камере, чтобы прикреплять фото к ответам чек-листа.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Нужен доступ к галерее, чтобы прикреплять фото и видео к ответам.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Нужен доступ к микрофону для записи видео к ответам.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Приложение может сохранять сжатые фото перед загрузкой.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ru</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>checklist_flutter</string>
 	<key>CFBundlePackageType</key>
@@ -43,6 +30,19 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Нужен доступ к камере, чтобы прикреплять фото к ответам чек-листа.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Нужен доступ к микрофону для записи видео к ответам.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Приложение может сохранять сжатые фото перед загрузкой.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Нужен доступ к галерее, чтобы прикреплять фото и видео к ответам.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
