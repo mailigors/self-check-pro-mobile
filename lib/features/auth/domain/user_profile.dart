@@ -8,6 +8,7 @@ class UserProfile {
     this.organizationName,
     this.positionName,
     this.roleName,
+    this.roleCode,
     this.controlObjects = const [],
   });
 
@@ -17,13 +18,20 @@ class UserProfile {
   final String? organizationName;
   final String? positionName;
   final String? roleName;
+  final String? roleCode;
+  bool get isSystemAdministrator =>
+      (roleCode ?? roleName) == 'SYSTEM_ADMINISTRATOR';
   final List<String> controlObjects;
 
   String get initials {
-    final parts = fullName.trim().split(RegExp(r'\s+')).where((part) => part.isNotEmpty);
+    final parts = fullName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty);
     if (parts.isEmpty) return 'U';
-    String firstRune(String value) =>
-        value.isEmpty ? '' : String.fromCharCodes(value.runes.take(1)).toUpperCase();
+    String firstRune(String value) => value.isEmpty
+        ? ''
+        : String.fromCharCodes(value.runes.take(1)).toUpperCase();
     final list = parts.toList();
     if (list.length == 1) return firstRune(list.first);
     return '${firstRune(list[0])}${firstRune(list[1])}';
@@ -39,6 +47,10 @@ class UserProfile {
       organizationName: asString(json['organizationName']),
       positionName: asString(position['name']),
       roleName: asString(role['name']) ?? asString(json['role']),
+      roleCode:
+          asString(role['code']) ??
+          asString(json['roleCode']) ??
+          (json['role'] is String ? json['role'] as String : null),
       controlObjects: asList(json['controlObjects'])
           .map((item) => asString(asMap(item)['name']))
           .whereType<String>()

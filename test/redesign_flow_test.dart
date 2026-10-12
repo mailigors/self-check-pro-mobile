@@ -8,6 +8,9 @@ import 'package:checklist_flutter/features/checklists/data/checklist_repository_
 import 'package:checklist_flutter/features/checklists/presentation/filling/filling_controller.dart';
 
 import 'support/redesign_fixtures.dart';
+import 'support/dashboard_fixtures.dart';
+
+import 'package:checklist_flutter/features/dashboard/data/dashboard_repository.dart';
 
 void main() {
   setUpAll(() => initializeDateFormatting('ru'));
@@ -30,11 +33,18 @@ void main() {
             () => PreviewAuthController(authenticated: loggedIn),
           ),
           checklistRepositoryProvider.overrideWithValue(repo),
+          dashboardRepositoryProvider.overrideWithValue(
+            PreviewDashboardRepository(),
+          ),
         ],
         child: const SelfCheckApp(),
       ),
     );
     await tester.pumpAndSettle();
+    if (loggedIn) {
+      await tester.tap(find.text('Чек-листы').last);
+      await tester.pumpAndSettle();
+    }
     return repo;
   }
 
@@ -240,6 +250,7 @@ void main() {
     await tester.ensureVisible(find.text('Войти'));
     await tester.tap(find.text('Войти'));
     await tester.pumpAndSettle();
-    expect(find.text('Начать контроль'), findsOneWidget);
+    expect(find.text('Дашборд'), findsNWidgets(2));
+    expect(find.text('В РАБОТЕ'), findsOneWidget);
   });
 }

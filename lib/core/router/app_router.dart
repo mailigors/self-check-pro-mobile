@@ -7,6 +7,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/checklists/presentation/filling/filling_screen.dart';
 import '../../features/checklists/presentation/list/checklists_list_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../layout/breakpoints.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
@@ -42,10 +43,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/splash',
         builder: (context, state) => const _SplashScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AppShell(navigationShell: navigationShell);
@@ -55,7 +53,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/',
-                builder: (context, state) => const ChecklistsListScreen(),
+                builder: (context, state) => const DashboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/checklists',
+                builder: (context, state) => ChecklistsListScreen(
+                  // A dashboard action reapplies its filter even if this URL
+                  // was already open and the list filter changed locally.
+                  key: ValueKey(state.extra),
+                  initialFilter:
+                      state.uri.queryParameters['status'] == 'IN_WORK'
+                      ? ListFilter.inWork
+                      : ListFilter.all,
+                ),
               ),
             ],
           ),
@@ -103,13 +117,25 @@ class AppShell extends StatelessWidget {
               selectedLabelTextStyle: AppText.bodyH5(color: AppColors.brand),
               destinations: const [
                 NavigationRailDestination(
+                  icon: Icon(Icons.bar_chart_rounded),
+                  label: Text('Дашборд'),
+                ),
+                NavigationRailDestination(
                   icon: AppIcon(AppIcon.file, size: 24),
-                  selectedIcon: AppIcon(AppIcon.file, size: 24, color: AppColors.brand),
+                  selectedIcon: AppIcon(
+                    AppIcon.file,
+                    size: 24,
+                    color: AppColors.brand,
+                  ),
                   label: Text('Чек-листы'),
                 ),
                 NavigationRailDestination(
                   icon: AppIcon(AppIcon.user, size: 24),
-                  selectedIcon: AppIcon(AppIcon.user, size: 24, color: AppColors.brand),
+                  selectedIcon: AppIcon(
+                    AppIcon.user,
+                    size: 24,
+                    color: AppColors.brand,
+                  ),
                   label: Text('Профиль'),
                 ),
               ],
@@ -131,13 +157,25 @@ class AppShell extends StatelessWidget {
         indicatorColor: AppColors.brandSoft,
         destinations: const [
           NavigationDestination(
+            icon: Icon(Icons.bar_chart_rounded),
+            label: 'Дашборд',
+          ),
+          NavigationDestination(
             icon: AppIcon(AppIcon.file, size: 24),
-            selectedIcon: AppIcon(AppIcon.file, size: 24, color: AppColors.brand),
+            selectedIcon: AppIcon(
+              AppIcon.file,
+              size: 24,
+              color: AppColors.brand,
+            ),
             label: 'Чек-листы',
           ),
           NavigationDestination(
             icon: AppIcon(AppIcon.user, size: 24),
-            selectedIcon: AppIcon(AppIcon.user, size: 24, color: AppColors.brand),
+            selectedIcon: AppIcon(
+              AppIcon.user,
+              size: 24,
+              color: AppColors.brand,
+            ),
             label: 'Профиль',
           ),
         ],
@@ -153,9 +191,7 @@ class _SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: AppColors.background,
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }

@@ -23,7 +23,8 @@ import '../control/control_start_sheet.dart';
 enum ListFilter { all, inWork, done, waiting }
 
 class ChecklistsListScreen extends ConsumerStatefulWidget {
-  const ChecklistsListScreen({super.key});
+  const ChecklistsListScreen({super.key, this.initialFilter = ListFilter.all});
+  final ListFilter initialFilter;
 
   @override
   ConsumerState<ChecklistsListScreen> createState() =>
@@ -46,7 +47,17 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
   @override
   void initState() {
     super.initState();
+    _filter = widget.initialFilter;
     Future.microtask(_reload);
+  }
+
+  @override
+  void didUpdateWidget(covariant ChecklistsListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialFilter != widget.initialFilter) {
+      _filter = widget.initialFilter;
+      _reload();
+    }
   }
 
   @override
