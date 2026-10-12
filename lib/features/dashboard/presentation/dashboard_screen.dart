@@ -21,24 +21,58 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   DashboardPeriod _period = DashboardPeriod.week;
   int? _organization;
+  DateTime _date = DateTime.now();
   late DashboardQuery _query;
+  GoRouter? _router;
+  bool _active = false;
 
   @override
-  void initState() {
-    super.initState();
-    _query = _period.query(DateTime.now());
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final router = GoRouter.of(context);
+    if (identical(router, _router)) return;
+    _router?.routeInformationProvider.removeListener(_onRouteChanged);
+    _router = router;
+    // The first entry already loads data through the providers in build.
+    _active = router.routeInformationProvider.value.uri.path == '/';
+    router.routeInformationProvider.addListener(_onRouteChanged);
+  }
+
+  void _onRouteChanged() {
+    final active = _router!.routeInformationProvider.value.uri.path == '/';
+    final entered = active && !_active;
+    _active = active;
+    if (entered) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _active) _refresh();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _router?.routeInformationProvider.removeListener(_onRouteChanged);
+    super.dispose();
   }
 
   void _select(DashboardPeriod period, int? organization) {
     setState(() {
       _period = period;
       _organization = organization;
-      _query = period.query(DateTime.now(), organisationId: organization);
+      _date = DateTime.now();
     });
   }
 
   Future<void> _refresh() async {
-    final next = _period.query(DateTime.now(), organisationId: _organization);
+    final user = ref.read(authControllerProvider).valueOrNull?.user;
+    if (user == null || user.id <= 0) return;
+    if (user.isSystemAdministrator && _organization == null) return;
+    _date = DateTime.now();
+    final next = _period.query(
+      _date,
+      userId: user.id,
+      organisationId: user.isSystemAdministrator ? _organization : null,
+    );
     if (next != _query) setState(() => _query = next);
     ref.invalidate(dashboardSummaryProvider(_query));
     ref.invalidate(dashboardDynamicsProvider(_query));
@@ -63,13 +97,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final system =
-        ref
-            .watch(authControllerProvider)
-            .valueOrNull
-            ?.user
-            ?.isSystemAdministrator ??
-        false;
+    final user = ref.watch(authControllerProvider).valueOrNull?.user;
+    if (user == null || user.id <= 0) return const SizedBox.shrink();
+    final system = user.isSystemAdministrator;
+    _query = _period.query(
+      _date,
+      userId: user.id,
+      organisationId: system ? _organization : null,
+    );
     final blocked = system && _organization == null;
     final summary = blocked
         ? null
@@ -121,7 +156,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ],
                       ),
                       Text(
-                        '$start — $end · все объекты',
+                        '$start — $end · мои чек-листы',
                         style: AppText.bodyH4(),
                       ),
                       const SizedBox(height: 16),

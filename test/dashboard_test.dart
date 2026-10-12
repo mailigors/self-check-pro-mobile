@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:checklist_flutter/main.dart';
+import 'package:checklist_flutter/core/network/api_exception.dart';
 import 'package:checklist_flutter/features/auth/domain/user_profile.dart';
 import 'package:checklist_flutter/features/auth/presentation/auth_controller.dart';
 import 'package:checklist_flutter/features/checklists/data/checklist_repository_impl.dart';
@@ -23,20 +24,34 @@ class _SystemAuthController extends PreviewAuthController {
   );
 }
 
+class _SwitchAuthController extends PreviewAuthController {
+  void switchUser(int id) {
+    state = AsyncData(
+      AuthState(
+        user: UserProfile(
+          id: id,
+          email: 'user$id@example.com',
+          fullName: 'Пользователь $id',
+        ),
+      ),
+    );
+  }
+}
+
 void main() {
   setUpAll(() => initializeDateFormatting('ru'));
 
   test('periods include today and cross month/year boundaries', () {
     expect(
-      DashboardPeriod.week.query(DateTime(2026, 1, 2)).fromDate,
+      DashboardPeriod.week.query(DateTime(2026, 1, 2), userId: 1).fromDate,
       '2025-12-27',
     );
     expect(
-      DashboardPeriod.month.query(DateTime(2026, 3, 1)).fromDate,
+      DashboardPeriod.month.query(DateTime(2026, 3, 1), userId: 1).fromDate,
       '2026-01-31',
     );
     expect(
-      DashboardPeriod.quarter.query(DateTime(2026, 10, 12)).groupBy,
+      DashboardPeriod.quarter.query(DateTime(2026, 10, 12), userId: 1).groupBy,
       'WEEK',
     );
   });
@@ -57,6 +72,44 @@ void main() {
       isTrue,
     );
   });
+
+  test(
+    'session change rejects old user queries and loads the new user',
+    () async {
+      final repository = PreviewDashboardRepository();
+      final container = ProviderContainer(
+        overrides: [
+          authControllerProvider.overrideWith(_SwitchAuthController.new),
+          dashboardRepositoryProvider.overrideWithValue(repository),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(authControllerProvider.future);
+      final oldQuery = DashboardPeriod.week.query(
+        DateTime(2026, 10, 12),
+        userId: 1,
+      );
+      final subscription = container.listen(
+        dashboardSummaryProvider(oldQuery),
+        (_, _) {},
+      );
+      addTearDown(subscription.close);
+      await container.read(dashboardSummaryProvider(oldQuery).future);
+      (container.read(authControllerProvider.notifier) as _SwitchAuthController)
+          .switchUser(2);
+      await container.pump();
+      await expectLater(
+        container.read(dashboardSummaryProvider(oldQuery).future),
+        throwsA(isA<ApiException>()),
+      );
+      final nextQuery = DashboardPeriod.week.query(
+        DateTime(2026, 10, 12),
+        userId: 2,
+      );
+      await container.read(dashboardSummaryProvider(nextQuery).future);
+      expect(repository.queries.map((q) => q.userId), [1, 2]);
+    },
+  );
 
   Future<PreviewDashboardRepository> launch(
     WidgetTester tester, {
@@ -95,6 +148,7 @@ void main() {
     final repository = await launch(tester);
     expect(find.text('Дашборд'), findsNWidgets(2));
     expect(find.text('78,4%'), findsOneWidget);
+    expect(repository.queries.single.userId, 1);
     await tester.tap(find.text('Месяц'));
     await tester.pumpAndSettle();
     final q = repository.queries.last;
@@ -105,6 +159,7 @@ void main() {
     await tester.tap(find.text('Квартал'));
     await tester.pumpAndSettle();
     expect(repository.queries.last.groupBy, 'WEEK');
+    expect(repository.queries.every((q) => q.userId == 1), isTrue);
     expect(tester.takeException(), isNull);
   });
 
@@ -124,6 +179,34 @@ void main() {
     expect(find.text('Аудит_Кухня_Версия_5.3'), findsNothing);
   });
 
+  testWidgets('returning to dashboard refreshes data and keeps the period', (
+    tester,
+  ) async {
+    final repository = await launch(tester);
+    await tester.tap(find.text('Месяц'));
+    await tester.pumpAndSettle();
+    final calls = repository.queries.length;
+    await tester.tap(find.text('Чек-листы').last);
+    await tester.pumpAndSettle();
+    expect(repository.queries.length, calls);
+    await tester.tap(find.text('Дашборд').last);
+    await tester.pumpAndSettle();
+    expect(repository.queries.length, calls + 1);
+    expect(
+      DateTime.parse(repository.queries.last.toDate)
+          .difference(DateTime.parse(repository.queries.last.fromDate))
+          .inDays,
+      29,
+    );
+    await tester.tap(find.text('Профиль').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Дашборд').last);
+    await tester.pumpAndSettle();
+    expect(repository.queries.length, calls + 2);
+    expect(repository.queries.last.userId, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'system administrator selects organization before analytics load',
     (tester) async {
@@ -134,6 +217,7 @@ void main() {
       await tester.tap(find.text('Тестовая организация').last);
       await tester.pumpAndSettle();
       expect(repository.queries.single.organisationId, 42);
+      expect(repository.queries.single.userId, 2);
       expect(find.text('78,4%'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },

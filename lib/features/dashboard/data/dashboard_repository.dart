@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_exception.dart';
 import '../../../core/utils/json_helpers.dart';
 import '../../auth/presentation/auth_controller.dart';
 
@@ -14,7 +15,12 @@ enum DashboardPeriod {
   final int days;
   final String groupBy;
 
-  DashboardQuery query(DateTime now, {int? organisationId}) {
+  DashboardQuery query(
+    DateTime now, {
+    required int userId,
+    int? organisationId,
+  }) {
+    if (userId <= 0) throw ArgumentError.value(userId, 'userId');
     final end = DateTime(now.year, now.month, now.day);
     final start = DateTime(end.year, end.month, end.day - days + 1);
     String date(DateTime d) =>
@@ -24,6 +30,7 @@ enum DashboardPeriod {
       toDate: date(end),
       groupBy: groupBy,
       organisationId: organisationId,
+      userId: userId,
     );
   }
 }
@@ -33,6 +40,7 @@ typedef DashboardQuery = ({
   String toDate,
   String groupBy,
   int? organisationId,
+  int userId,
 });
 
 class DashboardSummary {
@@ -124,6 +132,8 @@ class DashboardRepository {
   Map<String, dynamic> params(DashboardQuery q) => {
     'fromDate': q.fromDate,
     'toDate': q.toDate,
+    // A single scalar serializes as inspectorIds=ID, as in the web app.
+    'inspectorIds': q.userId,
     if (q.organisationId != null) 'organisationId': q.organisationId,
   };
 
@@ -144,15 +154,42 @@ class DashboardRepository {
     parser: (data) =>
         asList(data).map((e) => DashboardPoint.fromJson(asMap(e))).toList(),
   );
-  Future<List<DashboardAttention>> attention(DashboardQuery q) => api.get(
-    '/dashboard/deviations',
-    query: {...params(q), 'page': 0, 'size': 10, 'sort': 'startAt,desc'},
-    parser: (data) =>
-        asList(asMap(data)['content'])
-            .map((e) => DashboardAttention.fromJson(asMap(e)))
-            .where((e) => e.id > 0)
-            .toList(),
-  );
+  Future<List<DashboardAttention>> attention(DashboardQuery q) async {
+    // This endpoint has no inspector filter. Filter before taking the first
+    // ten results, continuing through pages containing other inspectors.
+    final result = <DashboardAttention>[];
+    for (var page = 0; ; page++) {
+      final data = await api.get<Map<String, dynamic>>(
+        '/dashboard/deviations',
+        query: {
+          'fromDate': q.fromDate,
+          'toDate': q.toDate,
+          if (q.organisationId != null) 'organisationId': q.organisationId,
+          'page': page,
+          'size': 100,
+          'sort': 'startAt,desc',
+        },
+        parser: asMap,
+      );
+      final content = asList(data['content']);
+      for (final raw in content) {
+        final json = asMap(raw);
+        if (asInt(json['inspectorId']) != q.userId) continue;
+        final item = DashboardAttention.fromJson(json);
+        if (item.id > 0) result.add(item);
+        if (result.length == 10) return result;
+      }
+      final totalPages = asInt(data['totalPages']);
+      if (content.isEmpty ||
+          asBool(data['last']) == true ||
+          (totalPages != null && page + 1 >= totalPages) ||
+          (totalPages == null &&
+              content.length < (asInt(data['size']) ?? 100))) {
+        return result;
+      }
+    }
+  }
+
   Future<List<DashboardOrganization>> organizations() => api.get(
     '/organizations',
     query: {'size': 200},
@@ -171,25 +208,35 @@ class DashboardRepository {
 final dashboardRepositoryProvider = Provider(
   (ref) => DashboardRepository(ref.watch(apiClientProvider)),
 );
+void _requireCurrentUser(Ref ref, DashboardQuery q) {
+  final user = ref.watch(authControllerProvider).valueOrNull?.user;
+  if (user == null || user.id <= 0 || user.id != q.userId) {
+    throw const ApiException(
+      message: 'Сессия пользователя изменилась',
+      statusCode: 401,
+    );
+  }
+}
+
 // Depend on the session so cached analytics are discarded when the user changes.
 final dashboardSummaryProvider = FutureProvider.autoDispose
     .family<DashboardSummary, DashboardQuery>((ref, q) {
-      ref.watch(authControllerProvider);
+      _requireCurrentUser(ref, q);
       return ref.watch(dashboardRepositoryProvider).summary(q);
     });
 final dashboardObjectsProvider = FutureProvider.autoDispose
     .family<List<DashboardObject>, DashboardQuery>((ref, q) {
-      ref.watch(authControllerProvider);
+      _requireCurrentUser(ref, q);
       return ref.watch(dashboardRepositoryProvider).objects(q);
     });
 final dashboardDynamicsProvider = FutureProvider.autoDispose
     .family<List<DashboardPoint>, DashboardQuery>((ref, q) {
-      ref.watch(authControllerProvider);
+      _requireCurrentUser(ref, q);
       return ref.watch(dashboardRepositoryProvider).dynamics(q);
     });
 final dashboardAttentionProvider = FutureProvider.autoDispose
     .family<List<DashboardAttention>, DashboardQuery>((ref, q) {
-      ref.watch(authControllerProvider);
+      _requireCurrentUser(ref, q);
       return ref.watch(dashboardRepositoryProvider).attention(q);
     });
 final dashboardOrganizationsProvider = FutureProvider.autoDispose((ref) {
