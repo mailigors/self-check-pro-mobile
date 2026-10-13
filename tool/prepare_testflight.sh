@@ -48,7 +48,7 @@ printf 'Flutter: %s\n' "$FLUTTER_BIN"
 "$FLUTTER_BIN" pub get
 "$FLUTTER_BIN" build ios --release --config-only \
   --build-name=1.0.0 \
-  --build-number=5 \
+  --build-number=6 \
   --dart-define=API_ORIGIN=https://selfcheck.pro \
   --target=lib/main.dart
 

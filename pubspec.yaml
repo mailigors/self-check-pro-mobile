@@ -1,7 +1,7 @@
 name: checklist_flutter
 description: Self-Check Pro — мобильное приложение исполнителя.
 publish_to: "none"
-version: 1.0.0+3
+version: 1.0.0+6
 
 environment:
   sdk: ^3.13.0
