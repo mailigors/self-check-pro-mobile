@@ -25,6 +25,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   late DashboardQuery _query;
   GoRouter? _router;
   bool _active = false;
+  bool _allAttention = false;
 
   @override
   void didChangeDependencies() {
@@ -214,6 +215,89 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           'Выберите организацию для просмотра дашборда.',
                         ),
                       if (!blocked) ...[
+                        _Card(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Требуют внимания',
+                                style: AppText.titleH2(),
+                              ),
+                              Text(
+                                'Отклонения по срокам',
+                                style: AppText.bodyH5(),
+                              ),
+                              const SizedBox(height: 12),
+                              _AsyncBlock(
+                                value: attention!,
+                                onRetry: () => ref.invalidate(
+                                  dashboardAttentionProvider(_query),
+                                ),
+                                builder: (rows) => rows.isEmpty
+                                    ? const Text('Отклонений по срокам нет.')
+                                    : Column(
+                                        children: [
+                                          ...(_allAttention
+                                                  ? rows
+                                                  : rows.take(3))
+                                              .map(
+                                                (a) => ListTile(
+                                                  contentPadding:
+                                                      EdgeInsets.zero,
+                                                  title: Text(
+                                                    a.template,
+                                                    style: AppText.headlineH5(),
+                                                  ),
+                                                  subtitle: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        a.object,
+                                                        style: AppText.bodyH5(),
+                                                      ),
+                                                      Text(
+                                                        a.reason,
+                                                        style: AppText.bodyH5(
+                                                          color:
+                                                              AppColors.warning,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  trailing: const Icon(
+                                                    Icons.chevron_right_rounded,
+                                                  ),
+                                                  onTap: () async {
+                                                    await context.push(
+                                                      '/checklists/${a.id}',
+                                                    );
+                                                    if (mounted) {
+                                                      await _refresh();
+                                                    }
+                                                  },
+                                                ),
+                                              ),
+                                          if (rows.length > 3)
+                                            TextButton(
+                                              onPressed: () => setState(
+                                                () => _allAttention =
+                                                    !_allAttention,
+                                              ),
+                                              child: Text(
+                                                _allAttention
+                                                    ? 'Свернуть'
+                                                    : 'Показать все (${rows.length})',
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         _AsyncBlock(
                           value: summary!,
                           onRetry: () =>
@@ -242,6 +326,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     child: _Metric(
                                       value: '${s.completed}',
                                       label: 'Завершено',
+                                      onTap: () => context.go(
+                                        '/checklists?status=COMPLETED',
+                                        extra: DateTime.now()
+                                            .microsecondsSinceEpoch,
+                                      ),
                                       icon: Icons.task_alt_rounded,
                                     ),
                                   ),
@@ -261,6 +350,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         value:
                                             '${rows.fold<int>(0, (sum, row) => sum + row.created)}',
                                         label: 'Проверок за период',
+                                        onTap: () => context.go(
+                                          '/checklists?from=${_query.fromDate}&to=${_query.toDate}',
+                                          extra: DateTime.now()
+                                              .microsecondsSinceEpoch,
+                                        ),
                                         icon: Icons.fact_check_outlined,
                                       ),
                                     ),
@@ -270,6 +364,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     child: _Metric(
                                       value: _percent(s.score),
                                       label: 'Средняя оценка',
+                                      onTap: () => context.go(
+                                        '/checklists?status=COMPLETED',
+                                        extra: DateTime.now()
+                                            .microsecondsSinceEpoch,
+                                      ),
                                       icon: Icons.speed_rounded,
                                     ),
                                   ),
@@ -277,7 +376,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                'В работе, завершено и средняя оценка — на $end.',
+                                'В работе и завершено — мои доступные чек-листы. Оценка — на $end.',
                                 style: AppText.bodyH5(),
                               ),
                             ],
@@ -330,56 +429,67 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                     const EdgeInsets.symmetric(
                                                       vertical: 10,
                                                     ),
-                                                child: Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          Text(
-                                                            o.name,
-                                                            style:
-                                                                AppText.headlineH5(),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 4,
-                                                          ),
-                                                          Text(
-                                                            'Завершено: ${o.completed}',
-                                                            style:
-                                                                AppText.bodyH5(),
-                                                          ),
-                                                          if (o.delta != null)
+                                                child: InkWell(
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                  onTap: () => context.go(
+                                                    '/checklists?status=COMPLETED&object=${Uri.encodeQueryComponent(o.name)}',
+                                                    extra: DateTime.now()
+                                                        .microsecondsSinceEpoch,
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
                                                             Text(
-                                                              '${o.delta! > 0 ? '+' : ''}${NumberFormat('0.#', 'ru').format(o.delta)} п.п.',
-                                                              style: AppText.bodyH5(
-                                                                color:
-                                                                    o.delta! >=
-                                                                        0
-                                                                    ? AppColors
-                                                                          .success
-                                                                    : AppColors
-                                                                          .error,
-                                                              ),
+                                                              o.name,
+                                                              style:
+                                                                  AppText.headlineH5(),
                                                             ),
-                                                        ],
+                                                            const SizedBox(
+                                                              height: 4,
+                                                            ),
+                                                            Text(
+                                                              'Завершено: ${o.completed}',
+                                                              style:
+                                                                  AppText.bodyH5(),
+                                                            ),
+                                                            if (o.delta != null)
+                                                              Text(
+                                                                '${o.delta! > 0 ? '+' : ''}${NumberFormat('0.#', 'ru').format(o.delta)} п.п.',
+                                                                style: AppText.bodyH5(
+                                                                  color:
+                                                                      o.delta! >=
+                                                                          0
+                                                                      ? AppColors
+                                                                            .success
+                                                                      : AppColors
+                                                                            .error,
+                                                                ),
+                                                              ),
+                                                          ],
+                                                        ),
                                                       ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Text(
-                                                      _percent(o.score),
-                                                      style: AppText.titleH2(
-                                                        color: o.score == null
-                                                            ? AppColors
-                                                                  .textSecondary
-                                                            : o.score! >= 70
-                                                            ? AppColors.success
-                                                            : AppColors.warning,
+                                                      const SizedBox(width: 8),
+                                                      Text(
+                                                        _percent(o.score),
+                                                        style: AppText.titleH2(
+                                                          color: o.score == null
+                                                              ? AppColors
+                                                                    .textSecondary
+                                                              : o.score! >= 70
+                                                              ? AppColors
+                                                                    .success
+                                                              : AppColors
+                                                                    .warning,
+                                                        ),
                                                       ),
-                                                    ),
-                                                  ],
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             )
@@ -390,69 +500,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _Card(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Требуют внимания',
-                                style: AppText.titleH2(),
-                              ),
-                              Text(
-                                'Отклонения по срокам · последние 10',
-                                style: AppText.bodyH5(),
-                              ),
-                              const SizedBox(height: 12),
-                              _AsyncBlock(
-                                value: attention!,
-                                onRetry: () => ref.invalidate(
-                                  dashboardAttentionProvider(_query),
-                                ),
-                                builder: (rows) => rows.isEmpty
-                                    ? const Text('Отклонений по срокам нет.')
-                                    : Column(
-                                        children: rows
-                                            .map(
-                                              (a) => ListTile(
-                                                contentPadding: EdgeInsets.zero,
-                                                title: Text(
-                                                  a.template,
-                                                  style: AppText.headlineH5(),
-                                                ),
-                                                subtitle: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      a.object,
-                                                      style: AppText.bodyH5(),
-                                                    ),
-                                                    Text(
-                                                      a.reason,
-                                                      style: AppText.bodyH5(
-                                                        color:
-                                                            AppColors.warning,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                trailing: const Icon(
-                                                  Icons.chevron_right_rounded,
-                                                ),
-                                                onTap: () async {
-                                                  await context.push(
-                                                    '/checklists/${a.id}',
-                                                  );
-                                                  if (mounted) await _refresh();
-                                                },
-                                              ),
-                                            )
-                                            .toList(),
-                                      ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ],
                     ],
                   ),
@@ -477,7 +524,7 @@ class _AsyncBlock<T> extends StatelessWidget {
   final VoidCallback onRetry;
   @override
   Widget build(BuildContext context) => value.when(
-    skipLoadingOnRefresh: false,
+    skipLoadingOnRefresh: true,
     data: builder,
     loading: () => const Padding(
       padding: EdgeInsets.all(24),

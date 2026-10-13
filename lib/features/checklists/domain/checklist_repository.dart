@@ -5,6 +5,8 @@ abstract class ChecklistRepository {
     required int userId,
     String? query,
     String? status,
+    String? createdFrom,
+    String? createdTo,
     int page = 0,
   });
 

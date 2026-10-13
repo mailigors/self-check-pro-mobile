@@ -23,8 +23,17 @@ import '../control/control_start_sheet.dart';
 enum ListFilter { all, inWork, done, waiting }
 
 class ChecklistsListScreen extends ConsumerStatefulWidget {
-  const ChecklistsListScreen({super.key, this.initialFilter = ListFilter.all});
+  const ChecklistsListScreen({
+    super.key,
+    this.initialFilter = ListFilter.all,
+    this.createdFrom,
+    this.createdTo,
+    this.objectName,
+  });
   final ListFilter initialFilter;
+  final String? createdFrom;
+  final String? createdTo;
+  final String? objectName;
 
   @override
   ConsumerState<ChecklistsListScreen> createState() =>
@@ -35,6 +44,9 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
   final _search = TextEditingController();
   Timer? _searchDebounce;
   ListFilter _filter = ListFilter.all;
+  String? _createdFrom;
+  String? _createdTo;
+  String? _objectName;
   List<ChecklistSummary> _items = [];
   bool _loading = true;
   bool _loadingMore = false;
@@ -48,6 +60,9 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
   void initState() {
     super.initState();
     _filter = widget.initialFilter;
+    _createdFrom = widget.createdFrom;
+    _createdTo = widget.createdTo;
+    _objectName = widget.objectName;
     Future.microtask(_reload);
   }
 
@@ -87,14 +102,43 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
     final user = ref.read(authControllerProvider).valueOrNull?.user;
     if (user == null) return;
     try {
-      final result = await ref
+      var result = await ref
           .read(checklistRepositoryProvider)
           .list(
             userId: user.id,
             query: _search.text.trim(),
             status: _statusParam,
+            createdFrom: _createdFrom,
+            createdTo: _createdTo,
             page: page,
           );
+      if (_objectName != null) {
+        final matching = result.items
+            .where((item) => item.controlObject?.name == _objectName)
+            .toList();
+        while (matching.length < 20 && result.hasMore) {
+          result = await ref
+              .read(checklistRepositoryProvider)
+              .list(
+                userId: user.id,
+                query: _search.text.trim(),
+                status: _statusParam,
+                createdFrom: _createdFrom,
+                createdTo: _createdTo,
+                page: result.page + 1,
+              );
+          matching.addAll(
+            result.items.where(
+              (item) => item.controlObject?.name == _objectName,
+            ),
+          );
+        }
+        result = PagedChecklists(
+          items: matching,
+          page: result.page,
+          totalPages: result.totalPages,
+        );
+      }
       if (!mounted) return;
       setState(() {
         _items = replace ? result.items : [..._items, ...result.items];
@@ -237,6 +281,27 @@ class _ChecklistsListScreenState extends ConsumerState<ChecklistsListScreen> {
                   ],
                 ),
               ),
+              if (_objectName != null ||
+                  _createdFrom != null ||
+                  _createdTo != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: InputChip(
+                    label: Text(
+                      _objectName ??
+                          '${_createdFrom ?? "…"} — ${_createdTo ?? "…"}',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onDeleted: () {
+                      setState(() {
+                        _objectName = null;
+                        _createdFrom = null;
+                        _createdTo = null;
+                      });
+                      _reload();
+                    },
+                  ),
+                ),
               const SizedBox(height: 12),
               Expanded(
                 child: RefreshIndicator(onRefresh: _reload, child: _body()),

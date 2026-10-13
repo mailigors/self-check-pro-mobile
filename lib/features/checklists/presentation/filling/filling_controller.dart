@@ -6,6 +6,7 @@ import '../../../../core/config/api_config.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/network/api_client.dart';
 import 'attachment_preview.dart';
+import 'answer_validation.dart';
 import '../../data/checklist_repository_impl.dart';
 import '../../domain/checklist_models.dart';
 
@@ -34,14 +35,14 @@ class FillingState {
   bool get readOnly => summary.status.code == ChecklistStatusCode.completed;
 
   List<TemplateItem> get activeItems => [
-        for (final section in template.sections)
-          if (section.active) ...section.items.where((item) => item.active),
-      ];
+    for (final section in template.sections)
+      if (section.active) ...section.items.where((item) => item.active),
+  ];
 
   int get answeredCount => activeItems.where((item) {
-        final answer = answers[item.id];
-        return answer != null && !answer.isEmpty;
-      }).length;
+    final answer = answers[item.id];
+    return answer != null && !answer.isEmpty;
+  }).length;
 
   FillingState copyWith({
     ChecklistDetail? detail,
@@ -62,12 +63,15 @@ class FillingState {
       errors: errors ?? this.errors,
       dirty: dirty ?? this.dirty,
       busy: busy ?? this.busy,
-      uploadingItemId: clearUpload ? null : uploadingItemId ?? this.uploadingItemId,
+      uploadingItemId: clearUpload
+          ? null
+          : uploadingItemId ?? this.uploadingItemId,
     );
   }
 }
 
-class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int> {
+class FillingController
+    extends AutoDisposeFamilyAsyncNotifier<FillingState, int> {
   @override
   Future<FillingState> build(int arg) async {
     ref.watch(attachmentCacheProvider(arg));
@@ -87,6 +91,11 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
       answers: Map.of(detail.answers),
       expandedSectionIds: expanded,
       errors: {
+        for (final section in template.sections.where((s) => s.active))
+          for (final item in section.items.where((i) => i.active))
+            if (detail.answers.containsKey(item.id) &&
+                validateAnswer(item, detail.answers[item.id]!) != null)
+              item.id: validateAnswer(item, detail.answers[item.id]!)!,
         for (final error in detail.validationErrors)
           if (error.errors.isNotEmpty) error.itemId: error.errors.first,
       },
@@ -109,7 +118,13 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
     final answers = Map<int, ItemAnswer>.from(current.answers)
       ..[itemId] = prev.copyWith(value: value, clearValue: clear);
     final errors = Map<int, String>.from(current.errors)..remove(itemId);
-    state = AsyncData(current.copyWith(answers: answers, errors: errors, dirty: true));
+    for (final item in current.activeItems.where((item) => item.id == itemId)) {
+      final error = validateAnswer(item, answers[itemId]!);
+      if (error != null) errors[itemId] = error;
+    }
+    state = AsyncData(
+      current.copyWith(answers: answers, errors: errors, dirty: true),
+    );
   }
 
   void setComment(int itemId, {required String? comment}) {
@@ -145,16 +160,19 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
     final current = _require;
     if (current.readOnly) return;
     if (bytes.length > ApiConfig.maxUploadBytes) {
-      throw const ApiException(message: 'Файл слишком большой', statusCode: 413);
+      throw const ApiException(
+        message: 'Файл слишком большой',
+        statusCode: 413,
+      );
     }
     state = AsyncData(current.copyWith(busy: true, uploadingItemId: item.id));
     try {
-      final uploaded = await ref.read(checklistRepositoryProvider).upload(
-            filename: filename,
-            bytes: bytes,
-            contentType: contentType,
-          );
-      ref.read(attachmentCacheProvider(current.summary.id))[uploaded.attachmentId] = DownloadedFile(
+      final uploaded = await ref
+          .read(checklistRepositoryProvider)
+          .upload(filename: filename, bytes: bytes, contentType: contentType);
+      ref.read(
+        attachmentCacheProvider(current.summary.id),
+      )[uploaded.attachmentId] = DownloadedFile(
         bytes: Uint8List.fromList(bytes),
         filename: uploaded.filename ?? filename,
         mimeType: uploaded.contentType ?? contentType,
@@ -166,9 +184,15 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
         'video' => prev.copyWith(videoIds: [...prev.videoIds, uploaded]),
         _ => prev.copyWith(otherIds: [...prev.otherIds, uploaded]),
       };
-      final answers = Map<int, ItemAnswer>.from(latest.answers)..[item.id] = next;
+      final answers = Map<int, ItemAnswer>.from(latest.answers)
+        ..[item.id] = next;
       state = AsyncData(
-        latest.copyWith(answers: answers, dirty: true, busy: false, clearUpload: true),
+        latest.copyWith(
+          answers: answers,
+          dirty: true,
+          busy: false,
+          clearUpload: true,
+        ),
       );
     } catch (error, stack) {
       state = AsyncData(_require.copyWith(busy: false, clearUpload: true));
@@ -182,9 +206,15 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
     final prev = current.answers[itemId] ?? const ItemAnswer();
     final answers = Map<int, ItemAnswer>.from(current.answers)
       ..[itemId] = prev.copyWith(
-        photoIds: prev.photoIds.where((e) => e.attachmentId != attachmentId).toList(),
-        videoIds: prev.videoIds.where((e) => e.attachmentId != attachmentId).toList(),
-        otherIds: prev.otherIds.where((e) => e.attachmentId != attachmentId).toList(),
+        photoIds: prev.photoIds
+            .where((e) => e.attachmentId != attachmentId)
+            .toList(),
+        videoIds: prev.videoIds
+            .where((e) => e.attachmentId != attachmentId)
+            .toList(),
+        otherIds: prev.otherIds
+            .where((e) => e.attachmentId != attachmentId)
+            .toList(),
       );
     state = AsyncData(current.copyWith(answers: answers, dirty: true));
   }
@@ -192,29 +222,12 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
   Map<int, String> _clientValidate(FillingState current) {
     final errors = <int, String>{};
     for (final item in current.activeItems) {
-      final answer = current.answers[item.id];
-      if (item.required && (answer == null || answer.isEmpty)) {
-        errors[item.id] = 'Обязательный вопрос';
-      }
-      if (item.photoRequired && (answer?.photoIds.isEmpty ?? true)) {
-        errors[item.id] = 'Требуется фото';
-      }
-      if (item.videoRequired && (answer?.videoIds.isEmpty ?? true)) {
-        errors[item.id] = 'Требуется видео';
-      }
-      if (['number', 'numeric', 'double'].contains(item.questionType)) {
-        final raw = answer?.value;
-        if (raw == null) continue;
-        final number = raw is num ? raw : num.tryParse('$raw'.replaceAll(',', '.'));
-        if (number != null) {
-          if (item.settings.minValue != null && number < item.settings.minValue!) {
-            errors[item.id] = 'Значение меньше минимума';
-          }
-          if (item.settings.maxValue != null && number > item.settings.maxValue!) {
-            errors[item.id] = 'Значение больше максимума';
-          }
-        }
-      }
+      final error = validateAnswer(
+        item,
+        current.answers[item.id] ?? const ItemAnswer(),
+        complete: true,
+      );
+      if (error != null) errors[item.id] = error;
     }
     return errors;
   }
@@ -223,7 +236,9 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
     final current = _require;
     state = AsyncData(current.copyWith(busy: true));
     try {
-      final saved = await ref.read(checklistRepositoryProvider).save(
+      final saved = await ref
+          .read(checklistRepositoryProvider)
+          .save(
             checklistId: current.summary.id,
             controlObjectId: current.summary.controlObject?.id,
             startAt: current.summary.startAt,
@@ -231,14 +246,18 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
             items: current.activeItems,
             answers: current.answers,
           );
+      final savedAnswers = saved.answers.isEmpty
+          ? current.answers
+          : saved.answers;
       final errors = {
+        ..._clientValidate(current.copyWith(answers: savedAnswers)),
         for (final error in saved.validationErrors)
           if (error.errors.isNotEmpty) error.itemId: error.errors.first,
       };
       state = AsyncData(
         current.copyWith(
           detail: saved,
-          answers: saved.answers.isEmpty ? current.answers : saved.answers,
+          answers: savedAnswers,
           errors: errors,
           dirty: false,
           busy: false,
@@ -267,11 +286,15 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
     }
     state = AsyncData(afterSave.copyWith(busy: true));
     try {
-      final completed = await ref.read(checklistRepositoryProvider).complete(afterSave.summary.id);
+      final completed = await ref
+          .read(checklistRepositoryProvider)
+          .complete(afterSave.summary.id);
       state = AsyncData(
         afterSave.copyWith(
           detail: completed,
-          answers: completed.answers.isEmpty ? afterSave.answers : completed.answers,
+          answers: completed.answers.isEmpty
+              ? afterSave.answers
+              : completed.answers,
           dirty: false,
           busy: false,
         ),
@@ -281,8 +304,7 @@ class FillingController extends AutoDisposeFamilyAsyncNotifier<FillingState, int
       state = AsyncData(_require.copyWith(busy: false));
       if (error.statusCode == 400) {
         throw const ApiException(
-          message:
-              'Заполненный лист имеет ошибки, перед отправкой необходимо заполнить все данные',
+          message: 'Заполненный лист имеет ошибки, перед отправкой необходимо заполнить все данные',
           statusCode: 400,
         );
       }

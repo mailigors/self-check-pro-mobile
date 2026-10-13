@@ -8,6 +8,8 @@ class PreviewDashboardRepository extends DashboardRepository {
     : super(ApiClient(TokenStorage(const FlutterSecureStorage())));
   final queries = <DashboardQuery>[];
   bool failObjects = false;
+  int attentionCount = 1;
+  Future<DashboardSummary>? pendingSummary;
   @override
   Future<List<DashboardOrganization>> organizations() async => const [
     DashboardOrganization(42, 'Тестовая организация'),
@@ -15,7 +17,10 @@ class PreviewDashboardRepository extends DashboardRepository {
   @override
   Future<DashboardSummary> summary(DashboardQuery q) async {
     queries.add(q);
-    return const DashboardSummary(inWork: 7, completed: 17, score: 78.4);
+    return pendingSummary ??
+        Future.value(
+          const DashboardSummary(inWork: 7, completed: 17, score: 78.4),
+        );
   }
 
   @override
@@ -37,12 +42,13 @@ class PreviewDashboardRepository extends DashboardRepository {
   }
 
   @override
-  Future<List<DashboardAttention>> attention(DashboardQuery q) async => const [
-    DashboardAttention(
-      id: 1,
-      template: 'Проверка с отклонением',
-      object: 'ФР Пхали-Хинкали',
-      reason: 'Не завершён в срок',
-    ),
+  Future<List<DashboardAttention>> attention(DashboardQuery q) async => [
+    for (var i = 0; i < attentionCount; i++)
+      DashboardAttention(
+        id: i + 1,
+        template: i == 0 ? 'Проверка с отклонением' : 'Отклонение ${i + 1}',
+        object: 'ФР Пхали-Хинкали',
+        reason: 'Не завершён в срок',
+      ),
   ];
 }

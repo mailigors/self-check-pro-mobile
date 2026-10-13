@@ -137,11 +137,64 @@ class DashboardRepository {
     if (q.organisationId != null) 'organisationId': q.organisationId,
   };
 
-  Future<DashboardSummary> summary(DashboardQuery q) => api.get(
-    '/reports/checklists/summary',
-    query: params(q),
-    parser: (data) => DashboardSummary.fromJson(asMap(data)),
-  );
+  Future<int> _count(int userId, String status) async {
+    var count = 0;
+    for (var page = 0; ; page++) {
+      final data = await api.get<Map<String, dynamic>>(
+        '/checklists',
+        query: {'user_id': userId, 'status': status, 'page': page, 'size': 100},
+        parser: asMap,
+      );
+      final total = asInt(data['totalElements']);
+      if (total != null) return total;
+      final content = asList(data['content']);
+      count += content.length;
+      if (content.isEmpty ||
+          asBool(data['last']) == true ||
+          page + 1 >= (asInt(data['totalPages']) ?? 1)) {
+        return count;
+      }
+    }
+  }
+
+  Future<DashboardSummary> summary(DashboardQuery q) async {
+    final results = await Future.wait<Object?>([
+      api.get<DashboardSummary>(
+        '/reports/checklists/summary',
+        query: params(q),
+        parser: (data) => DashboardSummary.fromJson(asMap(data)),
+      ),
+      _count(q.userId, 'IN_WORK'),
+      _count(q.userId, 'COMPLETED'),
+    ]);
+    return DashboardSummary(
+      inWork: results[1] as int,
+      completed: results[2] as int,
+      score: (results[0] as DashboardSummary).score,
+    );
+  }
+
+  Future<Set<int>> _accessibleIds(int userId) async {
+    final ids = <int>{};
+    for (var page = 0; ; page++) {
+      final data = await api.get<Map<String, dynamic>>(
+        '/checklists',
+        query: {'user_id': userId, 'page': page, 'size': 100},
+        parser: asMap,
+      );
+      final content = asList(data['content']);
+      for (final raw in content) {
+        final id = asInt(asMap(raw)['id']);
+        if (id != null && id > 0) ids.add(id);
+      }
+      if (content.isEmpty ||
+          asBool(data['last']) == true ||
+          page + 1 >= (asInt(data['totalPages']) ?? 1)) {
+        return ids;
+      }
+    }
+  }
+
   Future<List<DashboardObject>> objects(DashboardQuery q) => api.get(
     '/dashboard/objects-rating',
     query: params(q),
@@ -155,8 +208,8 @@ class DashboardRepository {
         asList(data).map((e) => DashboardPoint.fromJson(asMap(e))).toList(),
   );
   Future<List<DashboardAttention>> attention(DashboardQuery q) async {
-    // This endpoint has no inspector filter. Filter before taking the first
-    // ten results, continuing through pages containing other inspectors.
+    // Intersect deviations with the same authorized list used by the app.
+    final accessible = await _accessibleIds(q.userId);
     final result = <DashboardAttention>[];
     for (var page = 0; ; page++) {
       final data = await api.get<Map<String, dynamic>>(
@@ -176,8 +229,10 @@ class DashboardRepository {
         final json = asMap(raw);
         if (asInt(json['inspectorId']) != q.userId) continue;
         final item = DashboardAttention.fromJson(json);
-        if (item.id > 0) result.add(item);
-        if (result.length == 10) return result;
+        if (accessible.contains(item.id) &&
+            !result.any((e) => e.id == item.id)) {
+          result.add(item);
+        }
       }
       final totalPages = asInt(data['totalPages']);
       if (content.isEmpty ||
@@ -222,21 +277,25 @@ void _requireCurrentUser(Ref ref, DashboardQuery q) {
 final dashboardSummaryProvider = FutureProvider.autoDispose
     .family<DashboardSummary, DashboardQuery>((ref, q) {
       _requireCurrentUser(ref, q);
+      ref.keepAlive();
       return ref.watch(dashboardRepositoryProvider).summary(q);
     });
 final dashboardObjectsProvider = FutureProvider.autoDispose
     .family<List<DashboardObject>, DashboardQuery>((ref, q) {
       _requireCurrentUser(ref, q);
+      ref.keepAlive();
       return ref.watch(dashboardRepositoryProvider).objects(q);
     });
 final dashboardDynamicsProvider = FutureProvider.autoDispose
     .family<List<DashboardPoint>, DashboardQuery>((ref, q) {
       _requireCurrentUser(ref, q);
+      ref.keepAlive();
       return ref.watch(dashboardRepositoryProvider).dynamics(q);
     });
 final dashboardAttentionProvider = FutureProvider.autoDispose
     .family<List<DashboardAttention>, DashboardQuery>((ref, q) {
       _requireCurrentUser(ref, q);
+      ref.keepAlive();
       return ref.watch(dashboardRepositoryProvider).attention(q);
     });
 final dashboardOrganizationsProvider = FutureProvider.autoDispose((ref) {

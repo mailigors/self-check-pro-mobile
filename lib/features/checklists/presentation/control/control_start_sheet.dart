@@ -188,97 +188,104 @@ class _ControlStartSheetState extends ConsumerState<_ControlStartSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return SafeArea(
-      child: Container(
+    return LayoutBuilder(
+      builder: (context, constraints) => Container(
         width: double.infinity,
-        height: math.min(
-          620,
-          MediaQuery.sizeOf(context).height -
-              bottomInset -
-              MediaQuery.paddingOf(context).top -
-              24,
-        ),
+        height: math.min(620, math.max(0, constraints.maxHeight - bottomInset)),
         margin: EdgeInsets.only(bottom: bottomInset),
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          8,
+          24,
+          16 + MediaQuery.paddingOf(context).bottom,
+        ),
         decoration: const BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 36,
-              height: 5,
-              decoration: BoxDecoration(
-                color: AppColors.brand,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _step == 0 ? 'Объект контроля' : 'Шаблон чек-листа',
-                    style: AppText.titleH2(),
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Закрыть',
-                  onPressed: _starting
-                      ? null
-                      : () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close_rounded, color: AppColors.brand),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            AppTextField(
-              controller: _search,
-              hint: 'Поиск',
-              prefix: const Padding(
-                padding: EdgeInsets.all(12),
-                child: AppIcon(
-                  AppIcon.search,
-                  size: 24,
-                  color: AppColors.textSecondary,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: AppColors.brand,
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              onChanged: _onSearchChanged,
-            ),
-            const SizedBox(height: 12),
-            Expanded(child: _list()),
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              Text(_error!, style: AppText.bodyH5(color: AppColors.error)),
-            ],
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                if (_step == 1) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
                   Expanded(
-                    child: AppButton(
-                      label: 'Назад',
-                      variant: AppButtonVariant.secondary,
-                      onPressed: _starting ? null : _back,
+                    child: Text(
+                      _step == 0 ? 'Объект контроля' : 'Шаблон чек-листа',
+                      style: AppText.titleH2(),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  IconButton(
+                    tooltip: 'Закрыть',
+                    onPressed: _starting
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: AppColors.brand,
+                    ),
+                  ),
                 ],
-                Expanded(
-                  child: AppButton(
-                    label: _step == 0 ? 'Далее' : 'Начать',
-                    loading: _starting,
-                    onPressed: _canProceed && !_loading && !_starting
-                        ? _next
-                        : null,
-                    icon: Icons.arrow_forward_rounded,
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                controller: _search,
+                hint: 'Поиск',
+                prefix: const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: AppIcon(
+                    AppIcon.search,
+                    size: 24,
+                    color: AppColors.textSecondary,
                   ),
                 ),
+                onChanged: _onSearchChanged,
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: math.min(260, constraints.maxHeight * .4),
+                child: _list(),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 8),
+                Text(_error!, style: AppText.bodyH5(color: AppColors.error)),
               ],
-            ),
-          ],
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  if (_step == 1) ...[
+                    Expanded(
+                      child: AppButton(
+                        label: 'Назад',
+                        variant: AppButtonVariant.secondary,
+                        onPressed: _starting ? null : _back,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: AppButton(
+                      label: _step == 0 ? 'Далее' : 'Начать',
+                      loading: _starting,
+                      onPressed: _canProceed && !_loading && !_starting
+                          ? _next
+                          : null,
+                      icon: Icons.arrow_forward_rounded,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

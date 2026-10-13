@@ -4,12 +4,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:checklist_flutter/core/theme/app_theme.dart';
+import 'package:checklist_flutter/core/theme/app_colors.dart';
 import 'package:checklist_flutter/features/checklists/domain/checklist_models.dart';
 import 'package:checklist_flutter/features/checklists/data/checklist_repository_impl.dart';
 import 'package:checklist_flutter/features/checklists/presentation/filling/filling_controller.dart';
 import 'package:checklist_flutter/features/checklists/presentation/filling/item_answer_card.dart';
 
 import 'support/redesign_fixtures.dart';
+
+class _InputRepository extends PreviewChecklistRepository {
+  _InputRepository(this.item);
+  final TemplateItem item;
+  @override
+  Future<ChecklistTemplate> getTemplate(int templateId) async =>
+      ChecklistTemplate(
+        id: templateId,
+        name: 'Тест',
+        sections: [
+          TemplateSection(id: 1, name: 'Тест', items: [item]),
+        ],
+      );
+}
 
 void main() {
   test('normalizes API settings without losing choice values', () {
@@ -49,23 +64,21 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final container = ProviderContainer(
-      overrides: [
-        checklistRepositoryProvider.overrideWithValue(
-          PreviewChecklistRepository(),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    await tester.runAsync(
-      () => container.read(fillingControllerProvider(1).future),
-    );
     final item = TemplateItem.fromJson({
       'id': 6,
       'name': 'Тест',
       'question_type': type,
       'settings': settings,
     });
+    final container = ProviderContainer(
+      overrides: [
+        checklistRepositoryProvider.overrideWithValue(_InputRepository(item)),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.runAsync(
+      () => container.read(fillingControllerProvider(1).future),
+    );
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -82,6 +95,7 @@ void main() {
                     checklistId: 1,
                     item: item,
                     answer: state.answers[6] ?? const ItemAnswer(),
+                    error: state.errors[6],
                   );
                 },
               ),
@@ -95,7 +109,7 @@ void main() {
   }
 
   for (final type in ['short_text', 'long_text']) {
-    testWidgets('$type counts visible characters and retains overflow input', (
+    testWidgets('$type counts visible characters and limits overflow input', (
       tester,
     ) async {
       final container = await launch(tester, type, {
@@ -108,14 +122,14 @@ void main() {
       expect(find.text('Символов: 2 · мин 2 · макс 5'), findsOneWidget);
       await tester.enterText(find.byType(TextField).first, '123456');
       await tester.pump();
-      expect(find.text('Символов: 6 · мин 2 · макс 5'), findsOneWidget);
+      expect(find.text('Символов: 5 · мин 2 · макс 5'), findsOneWidget);
       expect(
         container
             .read(fillingControllerProvider(1))
             .valueOrNull!
             .answers[6]!
             .value,
-        '123456',
+        '12345',
       );
       await tester.enterText(find.byType(TextField).first, '');
       await tester.pump();
@@ -184,7 +198,7 @@ void main() {
         },
       );
       if (hint == 'dropdown') {
-        await tester.tap(find.byType(DropdownButtonFormField<String>));
+        await tester.tap(find.byType(TextField).first);
         await tester.pumpAndSettle();
       }
       await tester.tap(find.text('Исправно').last);
@@ -212,4 +226,111 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+  testWidgets(
+    'numeric limits report errors while typing and clear on correction',
+    (tester) async {
+      final container = await launch(tester, 'number', {
+        'min_value': 65,
+        'max_value': 95,
+      });
+      await tester.enterText(find.byType(TextField).first, '100');
+      await tester.pump();
+      expect(find.text('Значение больше максимума'), findsOneWidget);
+      expect(
+        container.read(fillingControllerProvider(1)).valueOrNull!.errors[6],
+        'Значение больше максимума',
+      );
+      await tester.enterText(find.byType(TextField).first, 'abc');
+      await tester.pump();
+      expect(find.text('Введите корректное число'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).first, '70,5');
+      await tester.pump();
+      expect(
+        container.read(fillingControllerProvider(1)).valueOrNull!.errors,
+        isEmpty,
+      );
+      expect(find.text('Введите корректное число'), findsNothing);
+    },
+  );
+
+  testWidgets('text minimum is reported immediately', (tester) async {
+    await launch(tester, 'short_text', {'min_length': 3, 'max_length': 5});
+    await tester.enterText(find.byType(TextField).first, 'a');
+    await tester.pump();
+    expect(find.text('Минимум символов: 3'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, 'abc');
+    await tester.pump();
+    expect(find.text('Минимум символов: 3'), findsNothing);
+  });
+
+  testWidgets(
+    'datetime opens digital time input; cancellation keeps answer empty',
+    (tester) async {
+      final container = await launch(tester, 'datetime', {});
+      await tester.tap(find.byType(TextField).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<TimePickerDialog>(find.byType(TimePickerDialog))
+            .initialEntryMode,
+        TimePickerEntryMode.inputOnly,
+      );
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(
+        container
+            .read(fillingControllerProvider(1))
+            .valueOrNull!
+            .answers[6]
+            ?.value,
+        isNull,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
+    'invalid value stays red with its error directly below the field after save and reload',
+    (tester) async {
+      final container = await launch(tester, 'number', {
+        'min_value': 65,
+        'max_value': 95,
+      });
+      await tester.enterText(find.byType(TextField).first, '100');
+      await tester.pump();
+      final field = find.byType(TextField).first;
+      final message = find.text('Значение больше максимума');
+      expect(tester.widget<TextField>(field).style!.color, AppColors.error);
+      expect(
+        tester.getTopLeft(message).dy,
+        greaterThanOrEqualTo(tester.getBottomLeft(field).dy),
+      );
+      expect(
+        tester.getBottomLeft(message).dy,
+        lessThan(tester.getTopLeft(find.text('Добавить комментарий')).dy),
+      );
+      await tester.runAsync(
+        () => container.read(fillingControllerProvider(1).notifier).save(),
+      );
+      await tester.pumpAndSettle();
+      expect(message, findsOneWidget);
+      expect(
+        container.read(fillingControllerProvider(1)).valueOrNull!.errors[6],
+        'Значение больше максимума',
+      );
+      expect(tester.widget<TextField>(field).style!.color, AppColors.error);
+      container.invalidate(fillingControllerProvider(1));
+      await tester.runAsync(
+        () => container.read(fillingControllerProvider(1).future),
+      );
+      await tester.pumpAndSettle();
+      expect(message, findsOneWidget);
+      expect(tester.widget<TextField>(field).style!.color, AppColors.error);
+      await tester.enterText(field, '70');
+      await tester.pump();
+      expect(message, findsNothing);
+      expect(tester.widget<TextField>(field).style!.color, AppColors.text);
+    },
+  );
 }

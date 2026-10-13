@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
@@ -9,6 +10,7 @@ class AppTextField extends StatefulWidget {
     super.key,
     this.label,
     this.controller,
+    this.inputFormatters,
     this.hint,
     this.errorText,
     this.enabled = true,
@@ -26,6 +28,7 @@ class AppTextField extends StatefulWidget {
 
   final String? label;
   final TextEditingController? controller;
+  final List<TextInputFormatter>? inputFormatters;
   final String? hint;
   final String? errorText;
   final bool enabled;
@@ -96,6 +99,7 @@ class _AppTextFieldState extends State<AppTextField> {
         ],
         TextField(
           controller: widget.controller,
+          inputFormatters: widget.inputFormatters,
           enabled: widget.enabled,
           readOnly: widget.readOnly,
           obscureText: _obscured,
@@ -106,10 +110,14 @@ class _AppTextFieldState extends State<AppTextField> {
           onTap: widget.onTap,
           onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
           cursorColor: AppColors.brand,
-          style: AppText.bodyH3(),
+          style: AppText.bodyH3(
+            color: isError ? AppColors.error : AppColors.text,
+          ),
           decoration: InputDecoration(
             hintText: widget.hint,
-            hintStyle: AppText.bodyH3(color: AppColors.placeholder),
+            hintStyle: AppText.bodyH3(
+              color: isError ? AppColors.error : AppColors.placeholder,
+            ),
             filled: true,
             fillColor: widget.fillColor,
             prefixIcon: widget.prefix,
@@ -149,8 +157,8 @@ class _AppTextFieldState extends State<AppTextField> {
               borderRadius: BorderRadius.circular(
                 widget.maxLines == 1 ? 28 : 20,
               ),
-              borderSide: const BorderSide(
-                color: AppColors.borderSubtle,
+              borderSide: BorderSide(
+                color: isError ? AppColors.error : AppColors.borderSubtle,
                 width: 1,
               ),
             ),

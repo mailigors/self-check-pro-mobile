@@ -71,7 +71,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   initialFilter:
                       state.uri.queryParameters['status'] == 'IN_WORK'
                       ? ListFilter.inWork
+                      : state.uri.queryParameters['status'] == 'COMPLETED'
+                      ? ListFilter.done
                       : ListFilter.all,
+                  createdFrom: state.uri.queryParameters['from'],
+                  createdTo: state.uri.queryParameters['to'],
+                  objectName: state.uri.queryParameters['object'],
                 ),
               ),
             ],

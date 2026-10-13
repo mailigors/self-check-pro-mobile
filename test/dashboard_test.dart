@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -116,6 +118,7 @@ void main() {
     bool failObjects = false,
     double scale = 1,
     bool system = false,
+    int attentionCount = 1,
   }) async {
     tester.view.physicalSize = const Size(320, 700);
     tester.view.devicePixelRatio = 1;
@@ -123,7 +126,9 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-    final repository = PreviewDashboardRepository()..failObjects = failObjects;
+    final repository = PreviewDashboardRepository()
+      ..failObjects = failObjects
+      ..attentionCount = attentionCount;
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -165,6 +170,7 @@ void main() {
 
   testWidgets('in-work tile opens filtered checklists', (tester) async {
     await launch(tester);
+    await tester.ensureVisible(find.text('Открыть список ›'));
     await tester.tap(find.text('Открыть список ›'));
     await tester.pumpAndSettle();
     expect(find.text('Продолжить'), findsOneWidget);
@@ -174,6 +180,7 @@ void main() {
     expect(find.text('Аудит_Кухня_Версия_5.3'), findsOneWidget);
     await tester.tap(find.text('Дашборд').last);
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Открыть список ›'));
     await tester.tap(find.text('Открыть список ›'));
     await tester.pumpAndSettle();
     expect(find.text('Аудит_Кухня_Версия_5.3'), findsNothing);
@@ -258,6 +265,95 @@ void main() {
       await tester.tap(find.text('Повторить'));
       await tester.pumpAndSettle();
       expect(find.text('81,5%'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
+    'attention shows first three above metrics and expands the full list',
+    (tester) async {
+      await launch(tester, attentionCount: 12);
+      expect(find.text('Отклонение 3'), findsOneWidget);
+      expect(find.text('Отклонение 4'), findsNothing);
+      expect(
+        tester.getTopLeft(find.text('Требуют внимания')).dy,
+        lessThan(tester.getTopLeft(find.text('В РАБОТЕ')).dy),
+      );
+      await tester.ensureVisible(find.text('Показать все (12)'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Показать все (12)'));
+      await tester.pumpAndSettle();
+      expect(find.text('Отклонение 12'), findsOneWidget);
+      await tester.ensureVisible(find.text('Свернуть'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Свернуть'));
+      await tester.pumpAndSettle();
+      expect(find.text('Отклонение 4'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final metric in [
+    'Завершено',
+    'Средняя оценка',
+    'Проверок за период',
+    'ФР Пхали-Хинкали',
+  ]) {
+    testWidgets('$metric opens its checklist list', (tester) async {
+      await launch(tester);
+      final target = find
+          .text(metric == 'ФР Пхали-Хинкали' ? metric : metric.toUpperCase())
+          .last;
+      await tester.ensureVisible(target);
+      await tester.pumpAndSettle();
+      await tester.tap(target);
+      await tester.pumpAndSettle();
+      expect(find.text('Начать контроль'), findsOneWidget);
+      if (metric != 'Проверок за период') {
+        expect(find.text('Продолжить'), findsNothing);
+        expect(find.text('Аудит_Кухня_Версия_5.3'), findsOneWidget);
+      } else {
+        expect(find.byType(InputChip), findsOneWidget);
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
+  test(
+    'dashboard cache survives leaving the screen within the session',
+    () async {
+      final repository = PreviewDashboardRepository();
+      final container = ProviderContainer(
+        overrides: [
+          authControllerProvider.overrideWith(PreviewAuthController.new),
+          dashboardRepositoryProvider.overrideWithValue(repository),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(authControllerProvider.future);
+      final query = DashboardPeriod.week.query(
+        DateTime(2026, 10, 13),
+        userId: 1,
+      );
+      await container.read(dashboardSummaryProvider(query).future);
+      await container.pump();
+      await container.read(dashboardSummaryProvider(query).future);
+      expect(repository.queries, hasLength(1));
+    },
+  );
+
+  testWidgets(
+    'background refresh retains the previous dashboard until new data arrives',
+    (tester) async {
+      final repository = await launch(tester);
+      final pending = Completer<DashboardSummary>();
+      repository.pendingSummary = pending.future;
+      await tester.tap(find.byTooltip('Обновить дашборд'));
+      await tester.pump();
+      expect(find.text('78,4%'), findsOneWidget);
+      pending.complete(
+        const DashboardSummary(inWork: 2, completed: 3, score: 90),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('90%'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

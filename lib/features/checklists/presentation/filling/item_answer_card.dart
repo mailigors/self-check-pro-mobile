@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +13,7 @@ import '../../../../core/widgets/app_icon.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../domain/checklist_models.dart';
 import 'filling_controller.dart';
+import 'answer_validation.dart';
 import 'attachment_preview.dart';
 import 'media_source_sheet.dart';
 
@@ -35,6 +37,8 @@ class ItemAnswerCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final visibleError =
+        error ?? (answer.value == null ? null : validateAnswer(item, answer));
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
@@ -42,7 +46,9 @@ class ItemAnswerCard extends ConsumerWidget {
         color: AppColors.background,
         borderRadius: BorderRadius.circular(26),
         border: Border.all(
-          color: error == null ? AppColors.borderSubtle : AppColors.error,
+          color: visibleError == null
+              ? AppColors.borderSubtle
+              : AppColors.error,
         ),
       ),
       child: Column(
@@ -58,8 +64,39 @@ class ItemAnswerCard extends ConsumerWidget {
             checklistId: checklistId,
             item: item,
             answer: answer,
+            errorText: visibleError,
             readOnly: readOnly,
           ),
+          if (visibleError != null &&
+              ([
+                    'boolean',
+                    'slider',
+                    'multichoice',
+                    'multi_choice',
+                  ].contains(item.questionType) ||
+                  ([
+                        'singlechoice',
+                        'single_choice',
+                      ].contains(item.questionType) &&
+                      item.settings.uiHint?.toLowerCase() != 'dropdown'))) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const AppIcon(
+                  AppIcon.warning,
+                  size: 16,
+                  color: AppColors.error,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    visibleError,
+                    style: AppText.bodyH5(color: AppColors.error),
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (!readOnly || answer.hasComment)
             _CommentField(
               checklistId: checklistId,
@@ -96,25 +133,6 @@ class ItemAnswerCard extends ConsumerWidget {
             answer: answer,
             readOnly: readOnly,
           ),
-          if (error != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const AppIcon(
-                  AppIcon.warning,
-                  size: 16,
-                  color: AppColors.error,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    error!,
-                    style: AppText.bodyH5(color: AppColors.error),
-                  ),
-                ),
-              ],
-            ),
-          ],
         ],
       ),
     );
@@ -167,12 +185,14 @@ class _Control extends ConsumerWidget {
     required this.item,
     required this.answer,
     required this.readOnly,
+    this.errorText,
   });
 
   final int checklistId;
   final TemplateItem item;
   final ItemAnswer answer;
   final bool readOnly;
+  final String? errorText;
 
   FillingController _ctrl(WidgetRef ref) =>
       ref.read(fillingControllerProvider(checklistId).notifier);
@@ -189,6 +209,7 @@ class _Control extends ConsumerWidget {
         );
       case 'long_text':
         return _SyncedTextField(
+          errorText: errorText,
           text: '${answer.value ?? ''}',
           hint: item.settings.placeholder ?? 'Подробное описание...',
           showLength: true,
@@ -208,6 +229,7 @@ class _Control extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _SyncedTextField(
+              errorText: errorText,
               text: answer.value?.toString() ?? '',
               hint: item.settings.placeholder ?? 'Введите число',
               unit: item.settings.unit,
@@ -263,38 +285,12 @@ class _Control extends ConsumerWidget {
               item.settings.options.contains(answer.value?.toString())
               ? answer.value?.toString()
               : null;
-          return DropdownButtonFormField<String>(
-            isExpanded: true,
-            hint: Text('Выберите вариант', style: AppText.bodyH4()),
-            key: ValueKey(selected),
-            initialValue: selected,
-            items: item.settings.options
-                .map(
-                  (option) => DropdownMenuItem(
-                    value: option,
-                    child: Text(
-                      item.settings.optionLabels[option] ?? option,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: readOnly
-                ? null
-                : (value) => _ctrl(ref).setAnswer(item.id, value),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: AppColors.surface,
-              hintStyle: AppText.bodyH3(color: AppColors.placeholder),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(28),
-                borderSide: const BorderSide(color: AppColors.border, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(28),
-                borderSide: const BorderSide(color: AppColors.brand, width: 1),
-              ),
-            ),
+          return _SelectField(
+            errorText: errorText,
+            item: item,
+            selected: selected,
+            enabled: !readOnly,
+            onChanged: (value) => _ctrl(ref).setAnswer(item.id, value),
           );
         }
         return Column(
@@ -349,6 +345,7 @@ class _Control extends ConsumerWidget {
       case 'date':
       case 'datetime':
         return _DateField(
+          errorText: errorText,
           item: item,
           value: answer.value?.toString(),
           readOnly: readOnly,
@@ -357,6 +354,7 @@ class _Control extends ConsumerWidget {
         );
       case 'file':
         return _SyncedTextField(
+          errorText: errorText,
           text: '${answer.value ?? ''}',
           hint: item.settings.placeholder ?? 'Комментарий к файлу',
           enabled: !readOnly,
@@ -366,6 +364,7 @@ class _Control extends ConsumerWidget {
         );
       default:
         return _SyncedTextField(
+          errorText: errorText,
           text: '${answer.value ?? ''}',
           hint: item.settings.placeholder ?? 'Введите ответ',
           showLength: true,
@@ -650,6 +649,7 @@ class _BoundsHint extends StatelessWidget {
 
 class _SyncedTextField extends StatefulWidget {
   const _SyncedTextField({
+    this.errorText,
     required this.text,
     required this.onChanged,
     this.hint,
@@ -664,6 +664,7 @@ class _SyncedTextField extends StatefulWidget {
     this.maxLines = 1,
   });
 
+  final String? errorText;
   final String text;
   final ValueChanged<String> onChanged;
   final String? hint;
@@ -718,6 +719,7 @@ class _SyncedTextFieldState extends State<_SyncedTextField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppTextField(
+          errorText: widget.errorText,
           hint: widget.hint,
           suffix: widget.unit == null
               ? null
@@ -729,6 +731,9 @@ class _SyncedTextFieldState extends State<_SyncedTextField> {
                   ),
                 ),
           controller: _controller,
+          inputFormatters: widget.maxLength == null
+              ? null
+              : [LengthLimitingTextInputFormatter(widget.maxLength)],
           enabled: widget.enabled,
           readOnly: widget.readOnly,
           keyboardType: widget.keyboardType,
@@ -765,6 +770,7 @@ class _SyncedTextFieldState extends State<_SyncedTextField> {
 
 class _DateField extends StatelessWidget {
   const _DateField({
+    this.errorText,
     required this.item,
     required this.value,
     required this.readOnly,
@@ -772,6 +778,7 @@ class _DateField extends StatelessWidget {
     required this.onChanged,
   });
 
+  final String? errorText;
   final TemplateItem item;
   final String? value;
   final bool readOnly;
@@ -808,6 +815,7 @@ class _DateField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppTextField(
+          errorText: errorText,
           readOnly: true,
           enabled: !readOnly,
           hint: label,
@@ -819,7 +827,7 @@ class _DateField extends StatelessWidget {
           onTap: readOnly
               ? null
               : () async {
-                  final seed = parsed ?? DateTime.now();
+                  final seed = parsed?.toLocal() ?? DateTime.now();
                   final initial = seed.isBefore(min)
                       ? min
                       : seed.isAfter(max)
@@ -831,24 +839,29 @@ class _DateField extends StatelessWidget {
                     firstDate: min,
                     lastDate: max,
                   );
-                  if (date == null) return;
+                  if (date == null || !context.mounted) return;
                   var result = date;
                   if (withTime && context.mounted) {
                     final time = await showTimePicker(
                       context: context,
+                      initialEntryMode: TimePickerEntryMode.inputOnly,
+                      builder: (context, child) => MediaQuery(
+                        data: MediaQuery.of(context)
+                            .copyWith(alwaysUse24HourFormat: true),
+                        child: child!,
+                      ),
                       initialTime: TimeOfDay.fromDateTime(
-                        parsed ?? DateTime.now(),
+                        parsed?.toLocal() ?? DateTime.now(),
                       ),
                     );
-                    if (time != null) {
-                      result = DateTime(
-                        date.year,
-                        date.month,
-                        date.day,
-                        time.hour,
-                        time.minute,
-                      );
-                    }
+                    if (time == null) return;
+                    result = DateTime(
+                      date.year,
+                      date.month,
+                      date.day,
+                      time.hour,
+                      time.minute,
+                    );
                   }
                   onChanged(
                     withTime
@@ -1093,4 +1106,71 @@ class _AttachButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SelectField extends StatelessWidget {
+  const _SelectField({
+    this.errorText,
+    required this.item,
+    required this.selected,
+    required this.enabled,
+    required this.onChanged,
+  });
+  final String? errorText;
+  final TemplateItem item;
+  final String? selected;
+  final bool enabled;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) => AppTextField(
+    errorText: errorText,
+    readOnly: true,
+    enabled: enabled,
+    hint: selected == null
+        ? 'Выберите вариант'
+        : item.settings.optionLabels[selected] ?? selected,
+    suffix: const Icon(Icons.expand_more_rounded),
+    onTap: !enabled
+        ? null
+        : () async {
+            FocusManager.instance.primaryFocus?.unfocus();
+            final value = await showModalBottomSheet<String>(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              backgroundColor: AppColors.surface,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              builder: (context) => SafeArea(
+                top: false,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * .7,
+                  ),
+                  child: ListView(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      Text('Выберите вариант', style: AppText.titleH2()),
+                      const SizedBox(height: 12),
+                      for (final option in item.settings.options)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _ChoiceRow(
+                            label: item.settings.optionLabels[option] ?? option,
+                            selected: selected == option,
+                            kind: _ChoiceKind.radio,
+                            onTap: () => Navigator.pop(context, option),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+            if (value != null && context.mounted) onChanged(value);
+          },
+  );
 }

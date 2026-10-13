@@ -49,8 +49,10 @@ class AppButton extends StatelessWidget {
       ),
     };
 
+    final textSize = MediaQuery.textScalerOf(context).scale(16);
+    final enlarged = textSize > 20;
     final child = SizedBox(
-      height: 56,
+      height: enlarged ? textSize * 2.6 + 24 : 56,
       child: Material(
         color: bg,
         shape: RoundedRectangleBorder(
@@ -76,10 +78,7 @@ class AppButton extends StatelessWidget {
                         Flexible(
                           child: Text(
                             label,
-                            maxLines:
-                                MediaQuery.textScalerOf(context).scale(16) > 20
-                                ? 2
-                                : 1,
+                            maxLines: enlarged ? 2 : 1,
                             textAlign: TextAlign.center,
                             overflow: TextOverflow.ellipsis,
                             style: AppText.headlineH5(color: fg),

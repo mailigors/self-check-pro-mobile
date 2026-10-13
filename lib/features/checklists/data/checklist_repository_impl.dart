@@ -7,6 +7,20 @@ import '../../../core/utils/json_helpers.dart';
 import '../domain/checklist_models.dart';
 import '../domain/checklist_repository.dart';
 
+// The backend expects OffsetDateTime. Preserve the user's local calendar day,
+// then serialize an explicit UTC offset instead of a naive date-time.
+String _periodBoundary(String value, {required bool end}) {
+  final date = DateTime.parse(value);
+  final local = end
+      ? DateTime(
+          date.year,
+          date.month,
+          date.day + 1,
+        ).subtract(const Duration(microseconds: 1))
+      : DateTime(date.year, date.month, date.day);
+  return local.toUtc().toIso8601String();
+}
+
 class ChecklistRepositoryImpl implements ChecklistRepository {
   ChecklistRepositoryImpl(this._api);
 
@@ -17,6 +31,8 @@ class ChecklistRepositoryImpl implements ChecklistRepository {
     required int userId,
     String? query,
     String? status,
+    String? createdFrom,
+    String? createdTo,
     int page = 0,
   }) {
     return _api.get(
@@ -28,6 +44,10 @@ class ChecklistRepositoryImpl implements ChecklistRepository {
         // 'sort': 'start_at,desc',
         'q': ?(query == null || query.isEmpty ? null : query),
         'status': ?status,
+        if (createdFrom != null)
+          'created_at_from': _periodBoundary(createdFrom, end: false),
+        if (createdTo != null)
+          'created_at_to': _periodBoundary(createdTo, end: true),
       },
       parser: (data) => PagedChecklists.fromJson(asMap(data)),
     );
@@ -58,8 +78,7 @@ class ChecklistRepositoryImpl implements ChecklistRepository {
     required List<TemplateItem> items,
     required Map<int, ItemAnswer> answers,
   }) {
-    final payloadAnswers = [...items]
-      ..sort((a, b) => a.id.compareTo(b.id));
+    final payloadAnswers = [...items]..sort((a, b) => a.id.compareTo(b.id));
     return _api.put(
       '/checklists/$checklistId',
       data: {
@@ -79,7 +98,9 @@ class ChecklistRepositoryImpl implements ChecklistRepository {
             map['answer'] = answer.value;
           }
           final comment = answer.comment?.trim();
-          map['comment'] = (comment != null && comment.isNotEmpty) ? comment : null;
+          map['comment'] = (comment != null && comment.isNotEmpty)
+              ? comment
+              : null;
           return map;
         }).toList(),
       },
@@ -137,7 +158,10 @@ class ChecklistRepositoryImpl implements ChecklistRepository {
   }
 
   @override
-  Future<PagedControlObjects> listControlObjects({String? query, int page = 0}) {
+  Future<PagedControlObjects> listControlObjects({
+    String? query,
+    int page = 0,
+  }) {
     return _api.get(
       '/control-objects',
       query: {
@@ -156,16 +180,16 @@ class ChecklistRepositoryImpl implements ChecklistRepository {
   }) {
     return _api.post(
       '/checklists/start',
-      data: {
-        'template_id': templateId,
-        'control_object_id': controlObjectId,
-      },
+      data: {'template_id': templateId, 'control_object_id': controlObjectId},
       parser: (data) => ChecklistSummary.fromJson(asMap(data)),
     );
   }
 
   @override
-  Future<ChecklistExportFile> export(int id, ChecklistExportFormat format) async {
+  Future<ChecklistExportFile> export(
+    int id,
+    ChecklistExportFormat format,
+  ) async {
     final file = await _api.download(
       '/checklists/$id/export/${format.pathSuffix}',
       fallbackFilename: 'checklist-$id.${format.fileExtension}',

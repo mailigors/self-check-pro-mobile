@@ -99,6 +99,8 @@ class PreviewChecklistRepository implements ChecklistRepository {
     required int userId,
     String? query,
     String? status,
+    String? createdFrom,
+    String? createdTo,
     int page = 0,
   }) async => PagedChecklists(
     items: [summary(1), summary(2), ..._created.keys.map(summary)]
