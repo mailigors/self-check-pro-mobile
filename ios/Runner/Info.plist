@@ -37,6 +37,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Нужен доступ к камере, чтобы прикреплять фото к ответам чек-листа.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Face ID используется для безопасного входа в Self-Check Pro.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Нужен доступ к микрофону для записи видео к ответам.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

@@ -32,12 +32,21 @@ class AuthRepositoryImpl implements AuthRepository {
       access: access,
       refresh: asString(tokens['refreshToken']),
     );
-    return me();
+    try {
+      return await me();
+    } catch (_) {
+      // Do not leave a partially established account session on disk.
+      await _storage.clear();
+      rethrow;
+    }
   }
 
   @override
   Future<UserProfile> me() {
-    return _api.get('/users/me', parser: (data) => UserProfile.fromJson(asMap(data)));
+    return _api.get(
+      '/users/me',
+      parser: (data) => UserProfile.fromJson(asMap(data)),
+    );
   }
 
   @override

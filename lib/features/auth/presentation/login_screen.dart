@@ -10,6 +10,7 @@ import '../../../core/theme/app_text.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_text_field.dart';
 import 'auth_controller.dart';
+import '../../../core/security/biometric_auth.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -22,6 +23,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   String? _error;
+  bool _automaticAttempted = false;
+  bool _showPassword = false;
+  bool _biometricBusy = false;
 
   bool get _canSubmit =>
       _email.text.trim().isNotEmpty && _password.text.isNotEmpty;
@@ -48,6 +52,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           .read(authControllerProvider.notifier)
           .login(_email.text.trim(), _password.text);
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         _error = error is ApiException
             ? error.message
@@ -56,10 +61,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _biometricLogin() async {
+    if (_biometricBusy) return;
+    setState(() {
+      _error = null;
+      _biometricBusy = true;
+    });
+    try {
+      await ref.read(authControllerProvider.notifier).loginWithBiometrics();
+      if (mounted &&
+          ref.read(authControllerProvider).valueOrNull?.isAuthenticated !=
+              true) {
+        setState(() => _showPassword = true);
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        // A server/network error after successful biometrics should allow a
+        // retry without asking for the password again.
+        _showPassword =
+            error is ApiException &&
+            (error.statusCode == 401 ||
+                !error.offline && error.statusCode == null);
+        _error = error is ApiException
+            ? error.message
+            : 'Не удалось войти. Попробуйте ещё раз или используйте пароль.';
+      });
+    } finally {
+      if (mounted) setState(() => _biometricBusy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
-    final loading = auth.isLoading;
+    final loading = auth.isLoading || _biometricBusy;
+    final biometricLogin = auth.valueOrNull?.biometricLogin == true;
+    final showPassword =
+        auth.valueOrNull?.isAuthenticated != true &&
+        (_showPassword ||
+            (!auth.isLoading && !biometricLogin && !_biometricBusy));
+    if (biometricLogin && !loading && !_automaticAttempted) {
+      _automaticAttempted = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _biometricLogin();
+      });
+    }
+    final biometricLabel = biometricLogin
+        ? ref.watch(biometricSettingsProvider).valueOrNull?.label
+        : null;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -89,33 +139,62 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Text('Вход', style: AppText.titleH1()),
                     const SizedBox(height: 6),
                     Text(
-                      'Введите логин и пароль',
+                      biometricLogin || _biometricBusy
+                          ? 'Подтвердите вход с Face ID'
+                          : 'Введите логин и пароль',
                       style: AppText.bodyH4(color: AppColors.text),
                     ),
                     const SizedBox(height: 32),
-                    AppTextField(
-                      label: 'ЛОГИН',
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                      fillColor: AppColors.background,
-                      hint: 'Введите логин',
-                    ),
-                    const SizedBox(height: 24),
-                    AppTextField(
-                      label: 'ПАРОЛЬ',
-                      controller: _password,
-                      obscureText: true,
-                      hint: 'Введите пароль',
-                      fillColor: AppColors.background,
-                      errorText: _error,
-                    ),
-                    const SizedBox(height: 24),
-                    AppButton(
-                      label: 'Войти',
-                      icon: Icons.arrow_forward_rounded,
-                      loading: loading,
-                      onPressed: loading || !_canSubmit ? null : _submit,
-                    ),
+                    if (biometricLogin || _biometricBusy) ...[
+                      AppButton(
+                        label:
+                            'Войти с ${biometricLabel ?? 'Face ID / Touch ID'}',
+                        icon: Icons.face_rounded,
+                        loading: _biometricBusy,
+                        onPressed: loading ? null : _biometricLogin,
+                      ),
+                      const SizedBox(height: 24),
+                      if (_error != null && !showPassword)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            _error!,
+                            style: AppText.bodyH4(color: AppColors.error),
+                          ),
+                        ),
+                      if (!showPassword)
+                        TextButton(
+                          onPressed: loading
+                              ? null
+                              : () => setState(() => _showPassword = true),
+                          child: const Text('Войти по паролю'),
+                        ),
+                    ],
+                    if (showPassword) ...[
+                      AppTextField(
+                        label: 'ЛОГИН',
+                        controller: _email,
+                        keyboardType: TextInputType.emailAddress,
+                        fillColor: AppColors.background,
+                        hint: 'Введите логин',
+                      ),
+                      const SizedBox(height: 24),
+                      AppTextField(
+                        label: 'ПАРОЛЬ',
+                        controller: _password,
+                        obscureText: true,
+                        hint: 'Введите пароль',
+                        fillColor: AppColors.background,
+                        errorText: _error,
+                      ),
+                      const SizedBox(height: 24),
+                      AppButton(
+                        label: 'Войти',
+                        icon: Icons.arrow_forward_rounded,
+                        loading: loading,
+                        onPressed: loading || !_canSubmit ? null : _submit,
+                      ),
+                    ],
                   ],
                 ),
               ),

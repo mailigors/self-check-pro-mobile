@@ -9,6 +9,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_header.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../auth/presentation/auth_controller.dart';
+import '../../../core/security/biometric_auth.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -23,6 +24,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _confirm = TextEditingController();
   bool _busy = false;
   bool _securityOpen = false;
+  bool _biometricBusy = false;
   String? _formError;
 
   @override
@@ -84,9 +86,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     await ref.read(authControllerProvider.notifier).logout();
   }
 
+  Future<void> _setBiometricEnabled(bool enabled) async {
+    setState(() => _biometricBusy = true);
+    try {
+      await ref
+          .read(authControllerProvider.notifier)
+          .setBiometricEnabled(enabled);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is ApiException
+                ? error.message
+                : 'Не удалось изменить настройку биометрии',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _biometricBusy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authControllerProvider).valueOrNull?.user;
+    final biometrics = ref.watch(biometricSettingsProvider).valueOrNull;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -237,6 +262,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            if (biometrics != null &&
+                                (biometrics.label != null ||
+                                    biometrics.enabled)) ...[
+                              SwitchListTile.adaptive(
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  'Вход с ${biometrics.label ?? 'Face ID / Touch ID'}',
+                                  style: AppText.headlineH5(),
+                                ),
+                                subtitle: const Text(
+                                  'Подтверждать сохранённую сессию при запуске приложения',
+                                ),
+                                value: biometrics.enabled,
+                                onChanged: _biometricBusy
+                                    ? null
+                                    : _setBiometricEnabled,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                             Text('Смена пароля', style: AppText.headlineH5()),
                             const SizedBox(height: 16),
                             AppTextField(
@@ -267,10 +311,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                       ),
                     const SizedBox(height: 16),
+                    if (biometrics?.enabled == true) ...[
+                      AppButton(
+                        label: 'Заблокировать приложение',
+                        icon: Icons.lock_outline,
+                        onPressed: _biometricBusy
+                            ? null
+                            : () => ref
+                                  .read(authControllerProvider.notifier)
+                                  .lock(),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     AppButton(
-                      label: 'Выйти',
+                      label: 'Выйти из аккаунта',
                       variant: AppButtonVariant.danger,
-                      onPressed: _logout,
+                      onPressed: _biometricBusy ? null : _logout,
                     ),
                   ],
                 ),

@@ -47,19 +47,37 @@ class ApiClient {
         },
         onError: (error, handler) async {
           final status = error.response?.statusCode;
-          final isRefreshCall = error.requestOptions.path.contains('/auth/refresh');
+          final isRefreshCall = error.requestOptions.path.contains(
+            '/auth/refresh',
+          );
           final skipAuth = error.requestOptions.extra['skipAuth'] == true;
-          if (status == 401 && !skipAuth && !isRefreshCall) {
+          if (status == 401 &&
+              !skipAuth &&
+              !isRefreshCall &&
+              error.requestOptions.extra['authRetried'] != true) {
             try {
               await _refreshTokens();
               final token = await _storage.readAccessToken();
               final request = error.requestOptions;
+              request.extra['authRetried'] = true;
               request.headers['Authorization'] = 'Bearer $token';
               final retry = await dio.fetch(request);
               handler.resolve(retry);
               return;
-            } catch (_) {
-              await _storage.clear();
+            } catch (refreshError) {
+              if (refreshError is DioException) {
+                final refreshStatus = refreshError.response?.statusCode;
+                if (refreshStatus == 400 || refreshStatus == 401) {
+                  await _storage.clear();
+                } else {
+                  // A network outage while refreshing does not revoke a session.
+                  handler.next(refreshError);
+                  return;
+                }
+              } else if (refreshError is ApiException &&
+                  refreshError.statusCode == 401) {
+                await _storage.clear();
+              }
             }
           }
           handler.next(error);
@@ -107,7 +125,10 @@ class ApiClient {
     return _run(() => dio.get<dynamic>(path, queryParameters: query), parser);
   }
 
-  Future<DownloadedFile> download(String path, {String? fallbackFilename}) async {
+  Future<DownloadedFile> download(
+    String path, {
+    String? fallbackFilename,
+  }) async {
     try {
       final response = await dio.get<List<int>>(
         path,
@@ -126,11 +147,12 @@ class ApiClient {
       final headerName = parseContentDispositionFilename(
         response.headers.value('content-disposition'),
       );
-      final mime = (response.headers.value(Headers.contentTypeHeader) ??
-              'application/octet-stream')
-          .split(';')
-          .first
-          .trim();
+      final mime =
+          (response.headers.value(Headers.contentTypeHeader) ??
+                  'application/octet-stream')
+              .split(';')
+              .first
+              .trim();
       return DownloadedFile(
         bytes: bytes,
         filename: _filenameWithExtension(
@@ -160,7 +182,12 @@ class ApiClient {
     T Function(dynamic data)? parser,
   }) {
     return _run(
-      () => dio.post<dynamic>(path, data: data, queryParameters: query, options: options),
+      () => dio.post<dynamic>(
+        path,
+        data: data,
+        queryParameters: query,
+        options: options,
+      ),
       parser,
     );
   }
